@@ -258,21 +258,6 @@ class EofNumPy(object):
         # Return the EOFs the same shape as the input data maps.
         return eofc.reshape((neofs,) + self.originalshape)
 
-    def eofsAsVariance(self, neofs=None):
-        """EOFs expressed as variance explained.
-
-        Returns normalized EOF patterns expressed as variance (the
-        square of what is returned by 'eofsAsCorrelation')
-
-        Optional argument:
-        neofs -- Number of EOFs to compute. Defaults to all EOFs.
-
-        """
-        # Get correlation maps.
-        eofc = self.eofsAsCorrelation(neofs)  # correlation maps
-        # Return the squared correlation maps.
-        return eofc * eofc
-
     def varianceFraction(self, neigs=None):
         """
         Fraction of the total variance explained by each principal mode.

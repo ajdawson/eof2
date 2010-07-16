@@ -261,34 +261,6 @@ class Eof(object):
         eofs.setMissing(self.missingValue)
         return eofs
     
-    def eofsAsVariance(self, neofs=None):
-        """EOFs expressed as variance explained.
-        
-        Returns normalized EOF patterns expressed as variance (the
-        square of what is returned by 'eofsAsCorrelation')
-        
-        Optional argument:
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
-        
-        Example 1:
-        Get maps of the EOFs scaled as variance.
-        >>> eofs = eofobj.eofsAsVariance()
-
-        Example 2:
-        Get a map of the first EOF scaled as variance.
-        >>> eof1 = eofobj.eofsAsVariance(neofs=1)
-        
-        """
-        eofs = self.eofobj.eofsAsVariance(neofs)
-        eofs[numpy.where(numpy.isnan(eofs))] = self.missingValue
-        eofax = cdms2.createAxis(range(len(eofs)), id="eof")
-        axlist = [eofax] + self.channels
-        eofs = cdms2.createVariable(eofs, id="eofs_variance", axes=axlist)
-        eofs.name = "empirical_orthogonal_functions"
-        eofs.long_name = "covariance between principal components and data"
-        eofs.setMissing(self.missingValue)
-        return eofs
-    
     def varianceFraction(self, neigs=None):
         """Fraction of the total variance explained by each mode.
 

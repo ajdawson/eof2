@@ -42,14 +42,6 @@ class TestEofBase(TestUtility):
         except Exception, err:
             self.fail(err)
 
-    def test_eofsAsVariance(self):
-        self.identify("eof variance maps")
-        try:
-            eofs = self.eofobj.eofsAsVariance()
-            eofs = self.eofobj.eofsAsVariance(neofs=2)
-        except Exception, err:
-            self.fail(err)
-
     def test_pcs(self):
         self.identify("principal components")
         try:
