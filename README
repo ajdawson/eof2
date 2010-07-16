@@ -1,0 +1,64 @@
+eof2 1.0  June 11, 2010 -- (C) Andrew Dawson
+-------------------------------------------
+
+Overview
+--------
+The eof2 package provides EOF analysis of temporal-spatial data sets.
+eof2 is built to handle data sets with missing values, such as a sea
+surface temperature field, of 2 dimensions or more. The EOF solution is
+computed using singular value decomposition (based on the SVDEOFs code
+from PyClimate (http://www.pyclimate.org/)). This makes eof2 suitable
+for analyzing data sets with large dimensions. The package is designed
+to work with the Climate Data Analysis Tools (CDAT; website
+http://www2-pcmdi.llnl.gov/cdat).
+
+Requirements
+------------
+eof2 requires the cdms2 package from CDAT for full functionality. The
+computational component of the code only requires NumPy. If cdms2 is not
+found then only the NumPy interface will be available.
+
+Quick start guide
+-----------------
+This package uses a layered approach to EOF analysis. The computation
+of the EOF solution is done using NumPy arrays via the EofNumPy object.
+This object takes a NumPy array as input and all returned fields are
+NumPy arrays. Built on top of the EofNumPy object is the Eof object,
+which takes a cdms2 variable as input and returns cdms2 variables with
+full meta-data as output.
+
+It is intended that most people will use the Eof object only. The NumPy
+interface is provided for those users who do not have CDAT/cdms2
+installed but do have Python with NumPy available, and those who need to
+analyze data (with no meta-data) contained in a NumPy array. If you are
+analyzing data contained in a cdms2 variable you should use the Eof
+object.
+
+The first step is to import the eof2 package and initialize an EOF
+analysis object:
+
+>>> from eof2 import Eof
+>>> eofobj = Eof(mydata)  # here mydata is a cdms2 variable
+
+There are several optional arguments to the Eof constructor that deal
+with weighting and centering of the input. See the built-in
+documentation for help:
+
+>>> help(Eof)
+
+All the computational work is done upon initialization of the Eof
+object. Method calls are used to return the specific result that is
+required. For instance to return EOF maps and principal component
+time series the following can be used:
+
+>>> eofs = eofobj.eofs()
+>>> pcs = eofobj.pcs()
+
+Both of these method calls can take optional arguments that affect the
+number of EOFs/PCs returned and the scaling performed on them.
+
+Methods are provided to return various different quantities related to
+the EOF analysis, and most of these methods take optional arguments that
+control their exact behaviour. The built-in documentation is detailed
+and complete, and is intended to be used as the primary reference source.
+
