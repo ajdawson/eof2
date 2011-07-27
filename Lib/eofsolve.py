@@ -342,6 +342,10 @@ class EofNumPy(object):
             factor /= numpy.add.reduce(self.L)
         # Return the typical errors.
         return self.L[slicer] * factor
+
+    def getWeights(self):
+        """Return the weights used for the analysis."""
+        return self.weights
  
  
 if __name__ == "__main__":

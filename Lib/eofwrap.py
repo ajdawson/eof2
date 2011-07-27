@@ -373,6 +373,22 @@ class Eof(object):
         typerrs.long_name = "north_typical_errors"
         return typerrs
 
+    def getWeights(self):
+        """Return the weights used for the analysis.
+        
+        Example:
+        Get the 2D weights variable used for the analysis.
+        >>> wgt = eofobj.getWeights()
+
+        """
+        weights = self.eofobj.getWeights()
+        if weights is not None:
+            axlist = self.channels[-2:]
+            weights = cdms2.createVariable(weights, id="weights", axes=axlist)
+            weights.name = "weights"
+            weights.long_name = "grid_weights"
+        return weights
+
 
 if __name__ == "__main__":
     pass
