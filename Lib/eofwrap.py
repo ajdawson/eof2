@@ -29,7 +29,7 @@ class Eof(object):
     
     """
     
-    def __init__(self, dataset, weights='none', center=True):
+    def __init__(self, dataset, weights='none', center=True, ddof=1):
         """Create an Eof object.
         
         Required argument:
@@ -56,6 +56,9 @@ class Eof(object):
             This option should only be set to False if you know what you
             are doing and why. Defaults to True (mean is removed).
             the mean.
+        ddof -- 'Delta degrees of freedom'. The divisor used to
+            normalize the covariance matrix is N - ddof where N is the
+            number of samples. Defaults to 1.
 
         Example:
         >>> from eof2 import Eof
@@ -157,7 +160,7 @@ class Eof(object):
         # data set. The object will be used for the decomposition and
         # for returning the results.
         self.eofobj = EofNumPy(dataset.data, missing=self.missingValue,
-                          weights=wtarray, center=center)
+                          weights=wtarray, center=center, ddof=ddof)
         
     def pcs(self, pcscaling=0, npcs=None):
         """Principal components.

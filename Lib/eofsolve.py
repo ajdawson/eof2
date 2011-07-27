@@ -37,7 +37,8 @@ class EofNumPy(object):
 
     """
 
-    def __init__(self, dataset, missing=None, weights=None, center=True):
+    def __init__(self, dataset, missing=None, weights=None, center=True,
+            ddof=1):
         """Create an EofNumPy object.
         
         Arguments:
@@ -63,6 +64,9 @@ class EofNumPy(object):
             If False the mean along the first axis will not be removed.
             This option should only be set to False if you know what you
             are doing and why. Defaults to True (mean is removed).
+        ddof -- 'Delta degrees of freedom'. The divisor used to
+            normalize the covariance matrix is N - ddof where N is the
+            number of samples. Defaults to 1.
 
         """
         # Store the input data in an instance variable.
@@ -107,9 +111,9 @@ class EofNumPy(object):
             raise EofError("Missing values encountered in SVD.")
         # Singular values are the square-root of the eigenvalues of the
         # covariance matrix. Construct the eigenvalues appropriately and
-        # normalize by N-1 where N is the number of observations. This
+        # normalize by N-ddof where N is the number of observations. This
         # corresponds to the eigenvalues of the normalized covariance matrix.
-        normfactor = float(self.records - 1)
+        normfactor = float(self.records - ddof)
         self.L = Lh * Lh / normfactor
         # Store the number of eigenvalues (and hence EOFs) that were actually
         # computed.
