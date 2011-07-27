@@ -1,5 +1,5 @@
-"""eof2 - fast and efficient EOF analysis for CDAT and Python"""
-# (c) Copyright 2010 Andrew Dawson. All Rights Reserved.
+"""fast and efficient EOF analysis for CDAT and Python"""
+# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
 # 

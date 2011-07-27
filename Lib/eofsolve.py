@@ -6,7 +6,7 @@ added.
 
 """
 # (c) Copyright 2000 Jon Saenz, Jesus Fernandez and Juan Zubillaga.
-# (c) Copyright 2010 Andrew Dawson. All Rights Reserved.
+# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
 # 

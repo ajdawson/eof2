@@ -1,5 +1,5 @@
 """Wrapper for using cdms2 variables with the EofNumPy class."""
-# (c) Copyright 2010 Andrew Dawson. All Rights Reserved.
+# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved.
 # 
 # This file is part of eof2.
 # 

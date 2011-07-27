@@ -1,7 +1,7 @@
 """Build and install the windfield package.
 
 """
-# (c) Copyright 2010 Andrew Dawson. All Rights Reserved. 
+# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved. 
 #
 # This file is part of eof2.
 # 
@@ -22,7 +22,7 @@ from distutils.core import setup
 
 setup(
     name="eof2",
-    version="1.0",
+    version="1.1",
     description="EOF analysis.",
     author="Andrew Dawson",
     author_email="andrew.dawson@uea.ac.uk",

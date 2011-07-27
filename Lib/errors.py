@@ -1,5 +1,5 @@
 """Error classes for the eof2 package.""" 
-# (c) Copyright 2010 Andrew Dawson. All Rights Reserved. 
+# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved. 
 # 
 # This file is part of eof2.
 # 
