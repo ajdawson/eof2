@@ -92,6 +92,13 @@ class TestEofBase(TestUtility):
         except Exception, err:
             self.fail(err)
 
+    def test_getWeights(self):
+        self.identify("grid weights")
+        try:
+            weights = self.eofobj.getWeights()
+        except Exception, err:
+            self.fail(err)
+
 
 class TestEofNumPy(TestEofBase, unittest.TestCase):
     """Test the EofNumPy object on its own."""
