@@ -25,7 +25,7 @@ setup(
     version="1.1",
     description="EOF analysis.",
     author="Andrew Dawson",
-    author_email="andrew.dawson@uea.ac.uk",
+    author_email="dawson@atm.ox.ac.uk",
     packages=["eof2"],
     package_dir={"eof2":"Lib"}
 )
