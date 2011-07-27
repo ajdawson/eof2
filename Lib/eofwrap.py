@@ -40,15 +40,16 @@ class Eof(object):
         
         Optional arguments:
         weights -- Sets the weighting method. Defaults to no weighting.
-            The following weighting parameters are used:
-            'default':
-            latw[i]=(0.5 * abs(sin(latbnd[i+1])-sin(latbnd[i])))**0.5
-                (bounds form of sqrt of cosine of latitude)
-            'area':
-            latw[i] = 0.5 * abs(sin(latbnd[i+1]-sin(latbnd[i])))
-                (bounds form of cosine of latitude)
-            'none':
-            Equal weights for all grid points.
+            The following weighting parameters are valid:
+
+            'area'    - Square-root of grid cell area normalized by
+                        total area. This is a standard weighting and
+                        should be used if you are unsure.
+
+            'cos_lat' - Square-root of cosine of latitude.
+
+            'none'    - Equal weights for all grid points.
+
         center -- If True the mean along the first axis of the input
             data set (the time-mean) will be removed prior to analysis.
             If False the mean along the first axis will not be removed.
@@ -115,22 +116,21 @@ class Eof(object):
                 xyreversed = order.index("x") < order.index("y") or False
             # Get weights from the grid.
             latw, lonw = grid.getWeights()
-            # The weights are scaled such that the largest weight in
-            # each of the latitude and longitude weight arrays is scaled
-            # to unity.
-            latw = latw / numpy.maximum.reduce(latw)
-            lonw = lonw / numpy.maximum.reduce(lonw)
             # Modify the weights depending on the type of weighting
             # requested.
-            if weights == 'area':
-                # Area weights (cosine of latitude) are returned from
-                # the grid as default so no modification is required.
+            if weights == "area":
+                # Area weights are returned from the grid as default so no
+                # modification is required.
                 pass
-            elif weights == 'default':
+            elif weights == "cos_lat" or weights == "default":
                 # Take the square-root to transform the weights for the
-                # 'default' setting. Square root of cosine of latitude
-                # is the most appropriate weighting method for EOF
-                # analysis.
+                # 'cos_lat' setting ('default' is recognized for backwards
+                # compatibility.
+                # The weights are scaled such that the largest weight in
+                # each of the latitude and longitude weight arrays is scaled
+                # to unity.
+                latw = latw / numpy.maximum.reduce(latw)
+                lonw = lonw / numpy.maximum.reduce(lonw)
                 latw = numpy.sqrt(latw)  # sqrt(cos(lat))
             else:
                 # If the value of the 'weights' optional argument is not
@@ -143,6 +143,12 @@ class Eof(object):
                 wtarray = numpy.outer(lonw, latw)
             else:
                 wtarray = numpy.outer(latw, lonw)
+            if weights == "area":
+                # If area weighting is specified then we normalize the
+                # Computed weight array by its total area and take the
+                # square root.
+                wtarray /= wtarray.sum()
+                wtarray = numpy.sqrt(wtarray)
             # Cast the wtarray to numpy.float32. This prevents the promotion
             # of 32-bit input to 64-bit on multiplication with the weight
             # array.
