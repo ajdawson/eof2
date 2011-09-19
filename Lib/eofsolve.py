@@ -120,8 +120,12 @@ class EofNumPy(object):
         self.neofs = len(self.L)
         # Re-introduce missing values into the eigenvectors in the same places
         # as they exist in the input maps. Create an array of not-a-numbers
-        # and then introduce data values where required.
-        self.flatE = numpy.ones([self.neofs, self.channels]) * numpy.NaN
+        # and then introduce data values where required. We have to use the
+        # astype method to ensure the eigenvectors are the same type as the
+        # input dataset since multiplication by np.NaN will promote to 64-bit.
+        self.flatE = numpy.ones([self.neofs, self.channels],
+                dtype=self.dataset.dtype) * numpy.NaN
+        self.flatE = self.flatE.astype(self.dataset.dtype)
         self.flatE[:, nonMissingIndex] = E
         # Remove the scaling on the principal component time-series that is
         # implicitily introduced by using SVD instead of eigen-decomposition.
@@ -225,7 +229,50 @@ class EofNumPy(object):
         slicer = slice(0, neigs)
         return self.L[slicer].copy()
 
-    def eofsAsCorrelation(self, neofs=None):
+#
+# This version of eofsAsCorrelation became broken at some point. The exact
+# version of NumPy/Python where this occured is not known. A version using
+# NumPy builtins has replaced this version which was largely the original
+# code from the PyClimate package.
+#
+#    def eofsAsCorrelation(self, neofs=None):
+#        """
+#        EOFs scaled as the correlation of the PCs with original field.
+#        
+#        Optional argument:
+#        neofs -- Number of EOFs to return. Defaults to all EOFs.
+#        
+#        """
+#        # Construct a slice object.
+#        slicer = slice(0, neofs)
+#        neofs = neofs or self.neofs
+#        # If the input array was not centered then do that and use it as the
+#        # residuals here. Otherwise just use the dataset as the data residuals
+#        # in the correlation calculation.
+#        if not self.centered:
+#            residual = self._center(self.dataset)
+#        else:
+#            residual = self.dataset
+#        # Take a subset of the principal components and compute the residuals.
+#        # PCs are in columns.
+#        pcres = self._center(self.P[:,slicer])
+#        # Compute the standard deviation of the data points and the principal
+#        # components.
+#        datastd = numpy.std(self.dataset, axis=0, ddof=1)
+#        pcsstd = numpy.std(self.P[:,slicer], axis=0, ddof=1)
+#        # Create an array to store the EOFs.
+#        eofc = numpy.zeros([neofs, self.channels])#, dtype=self.dataset.dtype)
+#        # Loop over each EOF computing the correlation between the time-series
+#        # at each input data grid point and the associated PC.
+#        for i in xrange(len(pcsstd)):
+#            # Compute departures.
+#            depts = numpy.add.reduce(residual * pcres[:,i][:,_NA])
+#            # Compute the correlation coefficient.
+#            eofc[i] = depts / ((self.neofs - 1) * datastd * pcsstd[i])
+#        # Return the EOFs the same shape as the input data maps.
+#        return eofc.reshape((neofs,) + self.originalshape)
+
+    def eofsAsCorrelation(self, neofs=None, ddof=1):
         """
         EOFs scaled as the correlation of the PCs with original field.
         
@@ -245,23 +292,20 @@ class EofNumPy(object):
             residual = self.dataset
         # Take a subset of the principal components and compute the residuals.
         # PCs are in columns.
-        pcres = self._center(self.P[:,slicer])
-        # Compute the standard deviation of the data points and the principal
-        # components.
-        datastd = numpy.std(self.dataset, axis=0, ddof=1)
-        pcsstd = numpy.std(self.P[:,slicer], axis=0, ddof=1)
+        pcres = self._center(self.P[:, slicer])
         # Create an array to store the EOFs.
-        eofc = numpy.zeros([neofs, self.channels])
+        eofc = numpy.zeros([neofs, self.channels], dtype=self.dataset.dtype)
         # Loop over each EOF computing the correlation between the time-series
         # at each input data grid point and the associated PC.
-        for i in xrange(len(pcsstd)):
-            # Compute departures.
-            depts = numpy.add.reduce(residual * pcres[:,i][:,_NA])
-            # Compute the correlation coefficient.
-            eofc[i] = depts / ((self.neofs - 1) * datastd * pcsstd[i])
+        for m in xrange(neofs):
+            # Compute the correlation matrix.
+            c = numpy.corrcoef(residual.T, pcres[:, m], ddof=1)
+            # Store the relevant results for instantaneous correlation between
+            # the PC and the time series at each grid point.
+            eofc[m] = c[-1, :self.channels]
         # Return the EOFs the same shape as the input data maps.
         return eofc.reshape((neofs,) + self.originalshape)
-
+        
     def varianceFraction(self, neigs=None):
         """
         Fraction of the total variance explained by each principal mode.
@@ -346,6 +390,83 @@ class EofNumPy(object):
     def getWeights(self):
         """Return the weights used for the analysis."""
         return self.weights
+
+    def projectField(self, field, missing=None, neofs=None, eofscaling=0,
+            weighted=True, notime=False):
+        """Project a field onto the EOFs.
+        
+        Projects a field onto the EOFs, or a subset of the EOFS,
+        associated with this instance. The field must have the same
+        spatial dimensions as the field used to initialize the EofNumPy
+        object, but may have a different length time dimension. Missing
+        values must be in the same places as in the original field also.
+
+        Argument:
+        field -- NumPy array of data values to project onto EOFs. Must
+            have the same dimensionality as the input to the EofNumPy
+            object except for the leading time dimension which may be
+            any length.
+        
+        Optional arguments:
+        missing -- The missing value of the data set. Defaults to NaN.
+            If the input data set has numpy.nan as its missing value
+            then they will automatically be recognized and this option
+            is not required.
+        neofs -- Number of EOFs to return. Defaults to all EOFs.
+        eofscaling -- Sets the scaling of the EOFs. The following values
+            are accepted:
+            0 - Un-scaled EOFs.
+            1 - EOFs are divided by the square-root of their eigenvalues.
+            2 - EOFs are multiplied by the square-root of their
+                eigenvalues.
+            Defaults to 0 (un-scaled EOFs).
+        weighted -- If True then the EOFs are weighted prior to the
+            projection. If False then no weighting is applied. Defaults
+            to True (weighting is applied).
+        notime -- If True indicates that the input field has no time
+            dimension and should be treated as spatial data. If False
+            then the input field will be treated as spatial-temporal
+            data. Defaults to False (spatial-temporal data).
+        
+        """
+        # Create a slice object for truncating the EOFs.
+        slicer = slice(0, neofs)
+        # If required, weight the dataset with the same weighting that was
+        # used to compute the EOFs.
+        field = field.copy()
+        if weighted:
+            wts = self.getWeights()
+            if wts is not None:
+                field = field * wts
+        # Replace missing values with NaN as this makes more sense when
+        # handling numpy arrays.
+        if missing is not None:
+            field[numpy.where(field == missing)] = numpy.NaN
+        # Flatten the input field into [time, space] dimensionality unless it
+        # is indicated that there is no time dimension present.
+        if notime:
+            channels = numpy.multiply.reduce(field.shape)
+            field_flat = field.reshape([channels])
+            nonMissingIndex = numpy.where(numpy.isnan(field_flat) == False)[0]
+        else:
+            records = field.shape[0]
+            channels = numpy.multiply.reduce(field.shape[1:])
+            field_flat = field.reshape([records, channels])
+            nonMissingIndex = numpy.where(numpy.isnan(field_flat[0]) == False)[0]
+        # Isolate the non-missing points.
+        field_flat = field_flat[..., nonMissingIndex]
+        # Remove missing values from the flat EOFs.
+        eofNonMissingIndex = numpy.where(numpy.isnan(self.flatE[0]) == False)[0]
+        if (eofNonMissingIndex != nonMissingIndex).any():
+            raise EofError("field and EOFs have different missing values")
+        eofs_flat = self.flatE[slicer, eofNonMissingIndex]
+        if eofscaling == 1:
+            eofs_flat /= numpy.sqrt(self.L[slicer])[:,_NA]
+        elif eofscaling == 2:
+            eofs_flat *= numpy.sqrt(self.L[slicer])[:,_NA]
+        # Project the field onto the EOFs using a matrix multiplication.
+        projected_pcs = numpy.dot(field_flat, eofs_flat.T)
+        return projected_pcs
  
  
 if __name__ == "__main__":
