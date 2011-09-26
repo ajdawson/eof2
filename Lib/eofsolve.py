@@ -229,49 +229,6 @@ class EofNumPy(object):
         slicer = slice(0, neigs)
         return self.L[slicer].copy()
 
-#
-# This version of eofsAsCorrelation became broken at some point. The exact
-# version of NumPy/Python where this occured is not known. A version using
-# NumPy builtins has replaced this version which was largely the original
-# code from the PyClimate package.
-#
-#    def eofsAsCorrelation(self, neofs=None):
-#        """
-#        EOFs scaled as the correlation of the PCs with original field.
-#        
-#        Optional argument:
-#        neofs -- Number of EOFs to return. Defaults to all EOFs.
-#        
-#        """
-#        # Construct a slice object.
-#        slicer = slice(0, neofs)
-#        neofs = neofs or self.neofs
-#        # If the input array was not centered then do that and use it as the
-#        # residuals here. Otherwise just use the dataset as the data residuals
-#        # in the correlation calculation.
-#        if not self.centered:
-#            residual = self._center(self.dataset)
-#        else:
-#            residual = self.dataset
-#        # Take a subset of the principal components and compute the residuals.
-#        # PCs are in columns.
-#        pcres = self._center(self.P[:,slicer])
-#        # Compute the standard deviation of the data points and the principal
-#        # components.
-#        datastd = numpy.std(self.dataset, axis=0, ddof=1)
-#        pcsstd = numpy.std(self.P[:,slicer], axis=0, ddof=1)
-#        # Create an array to store the EOFs.
-#        eofc = numpy.zeros([neofs, self.channels])#, dtype=self.dataset.dtype)
-#        # Loop over each EOF computing the correlation between the time-series
-#        # at each input data grid point and the associated PC.
-#        for i in xrange(len(pcsstd)):
-#            # Compute departures.
-#            depts = numpy.add.reduce(residual * pcres[:,i][:,_NA])
-#            # Compute the correlation coefficient.
-#            eofc[i] = depts / ((self.neofs - 1) * datastd * pcsstd[i])
-#        # Return the EOFs the same shape as the input data maps.
-#        return eofc.reshape((neofs,) + self.originalshape)
-
     def eofsAsCorrelation(self, neofs=None, ddof=1):
         """
         EOFs scaled as the correlation of the PCs with original field.

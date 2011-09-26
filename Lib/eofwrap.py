@@ -1,4 +1,4 @@
-"""Wrapper for using cdms2 variables with the EofNumPy class."""
+"""wrapper for using cdms2 variables with the EofNumPy class"""
 # (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved.
 # 
 # This file is part of eof2.
@@ -190,66 +190,6 @@ class Eof(object):
                 wtarray = numpy.outer(latw, lonw)
             else:
                 wtarray = numpy.outer(lonw, latw)
-#        # Either use the grid to compute appropriate weights or leave
-#        # unweighted. This decision depends on user input and the
-#        # presence of a grid in the input data.
-#        if grid is None or weights == "none":
-#            # Either no weighting was requested or no grid weights
-#            # are available.
-#            if weights != "none":
-#                # If weightting was requested but no grid is available then
-#                # raise an error.
-#                raise EofError("Automatic weighting requires a grid.")
-#            else:
-#                # Set wtarray to None, the appropriate argument for the
-#                # EofNumPy object when no weighting is required.
-#                wtarray = None
-#        else:
-#            # If automatic weighting needs to be done then we must check that
-#            # latitude and longitude are the right-most dimensions of the
-#            # input data. This allows the use of an array broadcast to create
-#            # a weights array. We should also determine if the latitude and
-#            # longitude axes are in reversed order ("xy"). If so this must be
-#            # taken into account when creating the weights array.
-#            if "x" in order and "y" in order:
-#                if order[-1] not in "xy" or order[-2] not in "xy":
-#                    raise EofError("Latitude and longitude must be the right-most dimensions when weighting is required.")
-#                xyreversed = order.index("x") < order.index("y") or False
-#            # Get weights from the grid.
-#            latw, lonw = grid.getWeights()
-#            # Modify the weights depending on the type of weighting
-#            # requested.
-#            if weights == "area":
-#                # Area weights are returned from the grid as default so no
-#                # modification is required.
-#                pass
-#            elif weights == "cos_lat" or weights == "default":
-#                # Take the square-root to transform the weights for the
-#                # 'cos_lat' setting ('default' is recognized for backwards
-#                # compatibility.
-#                # The weights are scaled such that the largest weight in
-#                # each of the latitude and longitude weight arrays is scaled
-#                # to unity.
-#                latw = latw / numpy.maximum.reduce(latw)
-#                lonw = lonw / numpy.maximum.reduce(lonw)
-#                latw = numpy.sqrt(latw)  # sqrt(cos(lat))
-#            else:
-#                # If the value of the 'weights' optional argument is not
-#                # recognised then an error is thrown alerting the user.
-#                raise EofError("invalid weights option: %s" % repr(weights))
-#            # Construct a 2d weight array by taking the outer product of
-#            # the latitude and longitude weights. This array is the same
-#            # shape as the latitude x longitude part of the input data.
-#            if xyreversed:
-#                wtarray = numpy.outer(lonw, latw)
-#            else:
-#                wtarray = numpy.outer(latw, lonw)
-#            if weights == "area":
-#                # If area weighting is specified then we normalize the
-#                # Computed weight array by its total area and take the
-#                # square root.
-#                wtarray /= wtarray.sum()
-#                wtarray = numpy.sqrt(wtarray)
         # Cast the wtarray to numpy.float32. This prevents the promotion of
         # 32-bit input to 64-bit on multiplication with the weight array, this
         # will fail with a AttributeError exception if the weights array is
