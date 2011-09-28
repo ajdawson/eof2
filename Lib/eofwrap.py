@@ -194,12 +194,20 @@ class Eof(object):
                 wtarray = numpy.outer(latw, lonw)
             else:
                 wtarray = numpy.outer(lonw, latw)
-        # Cast the wtarray to numpy.float32. This prevents the promotion of
-        # 32-bit input to 64-bit on multiplication with the weight array, this
-        # will fail with a AttributeError exception if the weights array is
-        # None, which it may be if no weighting was requested.
+        else:
+            # If weights is specified but does not match any of the prescribed
+            # values then it would be the right thing to assume it is an array
+            # of weights to be applied. If the weights are not a compatible
+            # shape or type then the EofNumPy object will raise the relevant
+            # exception. 
+            wtarray = weights
+        # Cast the wtarray to the same type as the dataset. This prevents the
+        # promotion of 32-bit input to 64-bit on multiplication with the
+        # weight array when not required. This will fail with a AttributeError
+        # exception if the weights array is None, which it may be if no
+        # weighting was requested.
         try:
-            wtarray = wtarray.astype(numpy.float32)
+            wtarray = wtarray.astype(dataset.dtype)
         except AttributeError:
             pass
         # Create an EofNumpy object using appropriate arguments for this
