@@ -23,6 +23,7 @@ added.
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import numpy
+import warnings
 
 from errors import EofError
 
@@ -88,6 +89,8 @@ class EofNumPy(object):
                 self.weights = weights
             except ValueError:
                 raise EofError("Weight array dimensions are incompatible.")
+            except TypeError:
+                raise EofError("Weights are not a valid type.")
         else:
             self.weights = None
         # Remove the time mean of the input data unless explicitly told
@@ -229,7 +232,7 @@ class EofNumPy(object):
         slicer = slice(0, neigs)
         return self.L[slicer].copy()
 
-    def eofsAsCorrelation(self, neofs=None, ddof=1):
+    def eofsAsCorrelation(self, neofs=None):
         """
         EOFs scaled as the correlation of the PCs with original field.
         
@@ -237,31 +240,28 @@ class EofNumPy(object):
         neofs -- Number of EOFs to return. Defaults to all EOFs.
         
         """
-        # Construct a slice object.
-        slicer = slice(0, neofs)
-        neofs = neofs or self.neofs
-        # If the input array was not centered then do that and use it as the
-        # residuals here. Otherwise just use the dataset as the data residuals
-        # in the correlation calculation.
-        if not self.centered:
-            residual = self._center(self.dataset)
-        else:
-            residual = self.dataset
-        # Take a subset of the principal components and compute the residuals.
-        # PCs are in columns.
-        pcres = self._center(self.P[:, slicer])
-        # Create an array to store the EOFs.
-        eofc = numpy.zeros([neofs, self.channels], dtype=self.dataset.dtype)
-        # Loop over each EOF computing the correlation between the time-series
-        # at each input data grid point and the associated PC.
-        for m in xrange(neofs):
-            # Compute the correlation matrix.
-            c = numpy.corrcoef(residual.T, pcres[:, m], ddof=1)
-            # Store the relevant results for instantaneous correlation between
-            # the PC and the time series at each grid point.
-            eofc[m] = c[-1, :self.channels]
-        # Return the EOFs the same shape as the input data maps.
-        return eofc.reshape((neofs,) + self.originalshape)
+        # Correlation of the original dataset with the PCs is identical to:
+        #   e_m l_m^(1/2) / s
+        # where e_m is the m'th eigenvector (EOF), l is the m'th eigenvalue,
+        # and s is the vector of standard deviations of the original
+        # data set (see Wilks 2006).
+        #
+        # Retrieve the EOFs multiplied by the square-root of their eigenvalue.
+        e = self.eofs(eofscaling=2, neofs=neofs)
+        # Compute the standard deviation map of the input dataset.
+        s = numpy.std(self.dataset.reshape(
+                (self.records,) + self.originalshape), axis=0, ddof=1)
+        # Compute the correlation maps, warnings are turned off to handle the
+        # case where standard deviation is zero. This can happen easily if
+        # cosine latitude weights are applied to a field with grid points at
+        # 90N, which will be weighted by zero and hence not vary with time, or
+        # more generally if the input dataset is constant in time at one or
+        # more locations.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            c = e / s
+        # return the correlation maps.
+        return c
         
     def varianceFraction(self, neigs=None):
         """
