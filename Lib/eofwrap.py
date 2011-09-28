@@ -131,7 +131,11 @@ class Eof(object):
             # the latitude values.
             try:
                 latvals = dataset.getLatitude()[:]
-                latw = numpy.sqrt(numpy.cos(numpy.deg2rad(latvals)))
+                coslat = numpy.cos(numpy.deg2rad(latvals))
+                # Cosine of latitude may be negative when latitude is near 90
+                # degrees North due to truncation error, account for that.
+                coslat[numpy.where(coslat < 0)] = 0.
+                latw = numpy.sqrt(coslat)
             except TypeError, AttributeError:
                 raise EofError("'%s' weighting scheme requires a latitude dimension." % weights)
             # If 90 or -90 are in the latitude dimension then inaccurate
