@@ -136,7 +136,7 @@ class Eof(object):
                 # degrees North due to truncation error, account for that.
                 coslat[numpy.where(coslat < 0)] = 0.
                 latw = numpy.sqrt(coslat)
-            except TypeError, AttributeError:
+            except (TypeError, AttributeError):
                 raise EofError("'%s' weighting scheme requires a latitude dimension." % weights)
             # If 90 or -90 are in the latitude dimension then inaccurate
             # floating point representations may cause the weight to be NaN,
