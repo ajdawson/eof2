@@ -22,7 +22,7 @@ from distutils.core import setup
 
 setup(
     name="eof2",
-    version="1.1",
+    version="1.2",
     description="EOF analysis.",
     author="Andrew Dawson",
     author_email="dawson@atm.ox.ac.uk",
