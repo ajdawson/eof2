@@ -6,7 +6,7 @@ added.
 
 """
 # (c) Copyright 2000 Jon Saenz, Jesus Fernandez and Juan Zubillaga.
-# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved.
+# (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
 # 
@@ -31,7 +31,7 @@ from errors import EofError
 # New axis constant (actually a reference to 'None' behind the scenes)
 _NA = numpy.newaxis
 
-class EofNumPy(object):
+class EofSolver(object):
     """EOF analysis object
     
     EOF analysis of NumPy arrays with missing data handling.
@@ -424,7 +424,11 @@ class EofNumPy(object):
         # Project the field onto the EOFs using a matrix multiplication.
         projected_pcs = numpy.dot(field_flat, eofs_flat.T)
         return projected_pcs
- 
+
+
+# Create an alias 'EofNumPy' for backward compatibility.
+EofNumPy = EofSolver
+
  
 if __name__ == "__main__":
     pass

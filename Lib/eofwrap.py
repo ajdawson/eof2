@@ -1,5 +1,5 @@
-"""wrapper for using cdms2 variables with the EofNumPy class"""
-# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved.
+"""wrapper for using cdms2 variables with the EofSolver class"""
+# (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 # 
 # This file is part of eof2.
 # 
@@ -20,7 +20,7 @@ import warnings
 import cdms2
 import numpy
 
-from eofsolve import EofNumPy
+from eofsolve import EofSolver
 from errors import EofError
 
 
@@ -198,7 +198,7 @@ class Eof(object):
             # If weights is specified but does not match any of the prescribed
             # values then it would be the right thing to assume it is an array
             # of weights to be applied. If the weights are not a compatible
-            # shape or type then the EofNumPy object will raise the relevant
+            # shape or type then the EofSolver object will raise the relevant
             # exception. 
             wtarray = weights
         # Cast the wtarray to the same type as the dataset. This prevents the
@@ -213,7 +213,7 @@ class Eof(object):
         # Create an EofNumpy object using appropriate arguments for this
         # data set. The object will be used for the decomposition and
         # for returning the results.
-        self.eofobj = EofNumPy(dataset.data, missing=self.missingValue,
+        self.eofobj = EofSolver(dataset.data, missing=self.missingValue,
                           weights=wtarray, center=center, ddof=ddof)
         
     def pcs(self, pcscaling=0, npcs=None):

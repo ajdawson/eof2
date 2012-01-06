@@ -1,5 +1,5 @@
 """fast and efficient EOF analysis for CDAT and Python"""
-# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved.
+# (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
 # 
@@ -21,9 +21,11 @@ from errors import EofError
 __all__ = ["EofError"]
 
 try:
-    # Attempt to import the EofNumPy object. If this is successful, add
-    # the EofNumPy object to the __all__ list.
-    from eofsolve import EofNumPy
+    # Attempt to import the EofSolver object. If this is successful, add
+    # the EofSolver object to the __all__ list. Also imports the EofSolver
+    # alias EofNumPy for backward compatibility.
+    from eofsolve import EofSolver, EofNumPy
+    __all__.append("EofSolver")
     __all__.append("EofNumPy")
 except ImportError:
     # If this fails the package cannot be used. An error should be
