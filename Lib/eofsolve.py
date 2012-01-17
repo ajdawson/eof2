@@ -40,7 +40,7 @@ class EofSolver(object):
 
     def __init__(self, dataset, missing=None, weights=None, center=True,
             ddof=1):
-        """Create an EofNumPy object.
+        """Create an EofSolver object.
         
         Arguments:
         dataset -- A NumPy array of two or more dimensions containing
@@ -289,10 +289,10 @@ class EofSolver(object):
     def reconstructedField(self, neofs):
         """Reconstructed data field based on a subset of EOFs.
 
-        If weights were passed to the EofNumPy object then the returned
+        If weights were passed to the EofSolver object then the returned
         reconstructed field will be automatically un-weighted. Otherwise
         the returned reconstructed field will  be weighted in the same
-        manner as the input to the EofNumPy object.
+        manner as the input to the EofSolver object.
         
         Argument:
         neofs -- Number fo EOFs to use for the reconstruction.
@@ -354,13 +354,13 @@ class EofSolver(object):
         
         Projects a field onto the EOFs, or a subset of the EOFS,
         associated with this instance. The field must have the same
-        spatial dimensions as the field used to initialize the EofNumPy
+        spatial dimensions as the field used to initialize the EofSolver
         object, but may have a different length time dimension. Missing
         values must be in the same places as in the original field also.
 
         Argument:
         field -- NumPy array of data values to project onto EOFs. Must
-            have the same dimensionality as the input to the EofNumPy
+            have the same dimensionality as the input to the EofSolver
             object except for the leading time dimension which may be
             any length.
         
@@ -369,7 +369,7 @@ class EofSolver(object):
             If the input data set has numpy.nan as its missing value
             then they will automatically be recognized and this option
             is not required.
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
+        neofs -- Number of EOFs to project onto. Defaults to all EOFs.
         eofscaling -- Sets the scaling of the EOFs. The following values
             are accepted:
             0 - Un-scaled EOFs.

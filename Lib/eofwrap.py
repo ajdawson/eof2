@@ -210,7 +210,7 @@ class Eof(object):
             wtarray = wtarray.astype(dataset.dtype)
         except AttributeError:
             pass
-        # Create an EofNumpy object using appropriate arguments for this
+        # Create an EofSolver object using appropriate arguments for this
         # data set. The object will be used for the decomposition and
         # for returning the results.
         self.eofobj = EofSolver(dataset.data, missing=self.missingValue,
