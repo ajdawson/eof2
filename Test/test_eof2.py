@@ -16,11 +16,11 @@ import eof2
 class SolverTestCase(TestCase):
 
     def __str__(self):
-        return 'EofNumPy Solver'
+        return 'EofSolver (NumPy) Solver'
 
     def setUp(self):
         self.sf, self.eofs, self.pcs = generate_data('numpy')
-        self.eofobj = eof2.EofNumPy(self.sf)
+        self.eofobj = eof2.EofSolver(self.sf)
 
     def test_eofs(self):
         identify('EOFs')
@@ -71,7 +71,7 @@ class CdmsWrapperTestCase(SolverTestCase):
     """Test the climate data management system wrapper."""
 
     def __str__(self):
-        return 'Eof Solver'
+        return 'Eof (cdms2) Solver'
 
     def setUp(self):
         self.sf, self.eofs, self.pcs = generate_data('cdms')
