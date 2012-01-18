@@ -324,6 +324,41 @@ class Eof(object):
         eofs.long_name = "correlation between principal components and data"
         return eofs
     
+    def eofsAsCovariance(self, neofs=None, pcscaling=0):
+        """EOFs scaled as the covariance of the PCs with orginal field.
+
+        Optional argument:
+        neofs -- Number of EOFs to return. Defaults to all EOFs.
+        pcscaling -- Sets the scaling of the principal components. The
+            following values are accepted:
+            0 - Un-scaled principal components.
+            1 - Principal components are divided by the square-root of
+                their eigenvalues. This results in PCs with unit
+                variance.
+            2 - Principal components are multiplied by the square-root
+                of their eigenvalues.
+            Defaults to 0 (un-scaled principal components).
+
+        Example 1:
+        >>> eofs = eofobj.eofsAsCovariance()
+
+        Example 2:
+        >>> eof1 = eofobj.eofsAsCovariance(neofs=1)
+
+        Example 3:
+        >>> eof1 = eofobj.eofsAsCovariance(neofs=1, pcscaling=1)
+        
+        """
+        eofs = self.eofobj.eofsAsCovariance(neofs, pcscaling)
+        eofs[numpy.where(numpy.isnan(eofs))] = self.missingValue
+        eofax = cdms2.createAxis(range(len(eofs)), id="eof")
+        axlist = [eofax] + self.channels
+        eofs = cdms2.createVariable(eofs, id="eofs_cov", axes=axlist,
+                fill_value=self.missingValue)
+        eofs.name = "empirical_orthogonal_functions"
+        eofs.long_name = "covariance between principal components and data"
+        return eofs
+    
     def varianceFraction(self, neigs=None):
         """Fraction of the total variance explained by each mode.
 
