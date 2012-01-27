@@ -15,10 +15,10 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
-from errors import EofError
+from errors import EofError, EofToolError
 
 # Define the objects imported by imports of the form: from eof2 import *
-__all__ = ["EofError"]
+__all__ = ["EofError", "EofToolError"]
 
 try:
     # Attempt to import the EofSolver object. If this is successful, add
@@ -27,6 +27,9 @@ try:
     from eofsolve import EofSolver, EofNumPy
     __all__.append("EofSolver")
     __all__.append("EofNumPy")
+    # Also import the NumPy-only versions of the supplementary tools.
+    import nptools
+    __all__.append("nptools")
 except ImportError:
     # If this fails the package cannot be used. An error should be
     # raised.
@@ -37,6 +40,9 @@ try:
     # Eof object to the __all__ list.
     from eofwrap import Eof
     __all__.append("Eof")
+    # Also import the cdms2 wrapped versions of the supplementary tools.
+    import tools
+    __all__.append("tools")
 except ImportError:
     # If this fails just leave the Eof object out. This allows users
     # with NumPy but no cdms2 to use the NumPy interface. 

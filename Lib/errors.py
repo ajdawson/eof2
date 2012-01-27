@@ -1,5 +1,5 @@
 """Error classes for the eof2 package.""" 
-# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved. 
+# (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved. 
 # 
 # This file is part of eof2.
 # 
@@ -20,3 +20,9 @@
 class EofError(Exception):
     """Generic exception class for errors in the eof2 package."""
     pass
+
+
+class EofToolError(Exception):
+    """Generic exception class for errors in the supplementary tools."""
+    pass
+
