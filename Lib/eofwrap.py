@@ -124,7 +124,7 @@ class Eof(object):
             # Operators version 1.5.0.
             wtarray /= wtarray.sum()
             wtarray = numpy.sqrt(wtarray)
-        elif weights == "cos_lat":
+        elif weights in ("cos_lat", "coslat"):
             # Square-root of cosine of latitude weights are requested, compute
             # the latitude weights from the dataset's latitude dimension. Get
             # the latitude values and compute the square-root of the cosine of
