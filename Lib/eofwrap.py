@@ -324,7 +324,7 @@ class Eof(object):
         eofs.long_name = "correlation between principal components and data"
         return eofs
     
-    def eofsAsCovariance(self, neofs=None, pcscaling=0):
+    def eofsAsCovariance(self, neofs=None, pcscaling=1):
         """EOFs scaled as the covariance of the PCs with orginal field.
 
         Optional argument:
@@ -337,7 +337,7 @@ class Eof(object):
                 variance.
             2 - Principal components are multiplied by the square-root
                 of their eigenvalues.
-            Defaults to 0 (un-scaled principal components).
+            Defaults to 1 (standardised principal components).
 
         Example 1:
         >>> eofs = eofobj.eofsAsCovariance()

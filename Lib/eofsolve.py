@@ -116,7 +116,8 @@ class EofSolver(object):
         # covariance matrix. Construct the eigenvalues appropriately and
         # normalize by N-ddof where N is the number of observations. This
         # corresponds to the eigenvalues of the normalized covariance matrix.
-        normfactor = float(self.records - ddof)
+        self.ddof = ddof
+        normfactor = float(self.records - self.ddof)
         self.L = Lh * Lh / normfactor
         # Store the number of eigenvalues (and hence EOFs) that were actually
         # computed.
@@ -250,7 +251,7 @@ class EofSolver(object):
         e = self.eofs(eofscaling=2, neofs=neofs)
         # Compute the standard deviation map of the input dataset.
         s = numpy.std(self.dataset.reshape(
-                (self.records,) + self.originalshape), axis=0, ddof=1)
+                (self.records,) + self.originalshape), axis=0, ddof=self.ddof)
         # Compute the correlation maps, warnings are turned off to handle the
         # case where standard deviation is zero. This can happen easily if
         # cosine latitude weights are applied to a field with grid points at
@@ -263,7 +264,7 @@ class EofSolver(object):
         # Return the correlation maps.
         return c
 
-    def eofsAsCovariance(self, neofs=None, pcscaling=0):
+    def eofsAsCovariance(self, neofs=None, pcscaling=1):
         """
         EOFs scaled as the covariance of the PCs with original field.
 
@@ -277,28 +278,46 @@ class EofSolver(object):
                 variance.
             2 - Principal components are multiplied by the square-root
                 of their eigenvalues.
-            Defaults to 0 (un-scaled principal components).
-
+            Defaults to 1 (standardised principal components).
 
         """
+        if pcscaling not in (1, 2, 3):
+            # An invalid PC scaling option was given.
+            raise EofError("Invalid pc scaling option: %s." % repr(eofscaling))
         # Retrieve the EOFs expressed as correlation between PCs and the
         # original data.
         eofsc = self.eofsAsCorrelation(neofs=neofs)
-        # Compute the standard deviation of the PCs. We shape the array of
-        # standard deviations so it can be broadcast against the EOFs
-        # expressed as correlation of the PCs with the input data.
-        # -- We could skip this calculation and just use appropriately scaled
-        #    eigenvalues. In the case of unit variance scaling just an array
-        #    of 1s. So either self.L, self.L*self.L or np.ones_like(self.L).
-        #    however, it is not very expensive to compute standard deviations
-        #    in NumPy so perhaps this is more clear?
-        pcs = self.pcs(npcs=neofs, pcscaling=pcscaling)
-        pcstd = numpy.std(pcs, axis=0, ddof=1)
+        # Compute the standard deviation of the PCs. Retrieve the appropriate
+        # number of eigenvalues. If the PCs are scaled by (multiplication of)
+        # the square-root of their eigenvalue then their standard deviations
+        # are given by the eigenvalues.
+        pcstd = self.L[slice(0, neofs)]
+        if pcscaling == 0:
+            # If PCs are unscaled then their standard deviation is the
+            # square-root of their eigenvalue.
+            pcstd = numpy.sqrt(pcstd)
+        elif pcscaling == 1:
+            # If the PCs are scaled by (division of) the square-root of their
+            # eigenvalue then their variance and standard deviation is 1.
+            pcstd = numpy.ones_like(pcstd)
+        # We shape the array of standard deviations so it can be broadcast
+        # against the EOFs expressed as correlation of the PCs with the input
+        # data.
         pcstd = pcstd.reshape([len(pcstd)] + [1] * len(self.originalshape))
-        # Compute the standardeviation of the input data set time series. This
-        # is reshaped into the spatial dimensions of the input data.
-        datastd = numpy.std(self.dataset, axis=0, ddof=1)
-        datastd = datastd.reshape(self.originalshape)
+        # Compute the standard deviation of the input data set time series.
+        # This is reshaped into the spatial dimensions of the input data.
+        if self.weights is not None:
+            # If the input data was weighted then we should remove the
+            # weighting before computing the standard deviation.
+            datastd = numpy.std(
+                    self.dataset.reshape(
+                        (self.records,)+self.originalshape) / \
+                    self.weights, axis=0, ddof=self.ddof)
+        else:
+            # If no weighting was used then the dataset does not need to be
+            # adjusted.
+            datastd = numpy.std(self.dataset, axis=0, ddof=self.ddof).reshape(
+                    self.originalshape)
         # Multiply by the standard deviation of the PCs and data time series
         # at each point. This converts the correlation into covariance.
         eofsv = eofsc * datastd * pcstd
