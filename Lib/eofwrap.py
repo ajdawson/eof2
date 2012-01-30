@@ -50,14 +50,15 @@ class Eof(object):
 
             'cos_lat' - Square-root of cosine of latitude.
 
-            'none'    - Equal weights for all grid points.
+            'none'    - Equal weights for all grid points (default).
+
+             None     - Same as 'none'.
 
         center -- If True the mean along the first axis of the input
             data set (the time-mean) will be removed prior to analysis.
             If False the mean along the first axis will not be removed.
             This option should only be set to False if you know what you
             are doing and why. Defaults to True (mean is removed).
-            the mean.
         ddof -- 'Delta degrees of freedom'. The divisor used to
             normalize the covariance matrix is N - ddof where N is the
             number of samples. Defaults to 1.
@@ -96,7 +97,7 @@ class Eof(object):
         # are several weighting schemes. The 'area' weighting scheme requires
         # a latitude-longitude grid to be present, the 'cos_lat' scheme only
         # requires a latitude dimension.
-        if weights == "none":
+        if weights in ("none", None):
             # No weights requested, set the weight array to None.
             wtarray = None
         elif weights == "area":
