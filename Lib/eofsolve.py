@@ -31,6 +31,7 @@ from errors import EofError
 # New axis constant (actually a reference to 'None' behind the scenes)
 _NA = numpy.newaxis
 
+
 class EofSolver(object):
     """EOF analysis object
     
@@ -475,7 +476,8 @@ class EofSolver(object):
         field_flat = field_flat[..., nonMissingIndex]
         # Remove missing values from the flat EOFs.
         eofNonMissingIndex = numpy.where(numpy.isnan(self.flatE[0]) == False)[0]
-        if (eofNonMissingIndex != nonMissingIndex).any():
+        if eofNonMissingIndex.shape != nonMissingIndex.shape or \
+                (eofNonMissingIndex != nonMissingIndex).any():
             raise EofError("field and EOFs have different missing values")
         eofs_flat = self.flatE[slicer, eofNonMissingIndex]
         if eofscaling == 1:
