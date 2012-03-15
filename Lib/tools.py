@@ -16,11 +16,95 @@
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import cdms2
+import numpy
 
 from errors import EofToolError
 from nptools import covariance_map as _npcovmap
 from nptools import correlation_map as _npcormap
 
+
+def _rootcoslat_weights(latdim):
+    """
+    latdim -- Latitude dimension.
+    rightdims -- Number of dimensions to the right of the latitude
+            dimension.
+    """
+    print 'computing coslat weights'
+    coslat = numpy.cos(numpy.deg2rad(latdim))
+    coslat[numpy.where(coslat < 0)] = 0.
+    latw = numpy.sqrt(coslat)
+    latw[numpy.where(numpy.isnan(latw))] = 0.
+    return latw
+
+
+def _area_weights(grid, gridorder):
+    print 'computing area weights'
+    latw, lonw = grid.getWeights()
+    if gridorder == 'xy':
+        wtarray = numpy.outer(lonw, latw)
+    else:
+        wtarray = numpy.outer(latw, lonw)
+    wtarray /= wtarray.sum()
+    wtarray = numpy.sqrt(wtarray)
+    return wtarray
+
+
+def weights_array(dataset, scheme='area'):
+    """Compute weights for a variable.
+    
+    The returned weights will be broadcastable against the input data
+    array.
+    
+    Argument:
+    dataset -- A cdms2 variable to generate weights for.
+
+    Keyword argument:
+    scheme -- The weighting scheme to use. Can be one of:
+                'coslat'/'cos_lat': Square-root of cosine of latitude.
+                'area': Normalized area weights.
+            Defaults to normalized area weights.
+
+    """
+    # A re-usable generic error message for the function. When raising an
+    # exception just fill in what is required.
+    errstr = "Weighting scheme '%s' requires %%s." % scheme
+    # Always use lower-case for the scheme, allowing the user to use 
+    # upper-case in their calling code without an error.
+    scheme = scheme.lower()
+    if scheme in ('area'):
+        # Handle area weighting.
+        grid = dataset.getGrid()
+        if grid is None:
+            raise EofToolError(errstr % 'a grid')
+        order = dataset.getOrder()
+        if "xy" in order:
+            gridorder = 'xy'
+            dimtoindex = dataset.getLatitude()
+        elif "yx" in order:
+            gridorder = 'yx'
+            dimtoindex = dataset.getLongitude()
+        else:
+            raise EofToolError(errstr % \
+                    "adjacent latitude and longitude dimensions")
+        # Retrieve area weights for the specified grid.
+        weights = _area_weights(grid, gridorder)
+    elif scheme in ('coslat', 'cos_lat'):
+        # Handle square-root of cosine of latitude weighting.
+        try:
+            latdim = dataset.getLatitude()[:]
+            dimtoindex = dataset.getLatitude()
+        except (AttributeError, TypeError):
+            raise EofToolError(errstr % 'a latitude dimension')
+        # Retrieve latitude weights.
+        weights = _rootcoslat_weights(latdim)
+    else:
+        raise EofToolError("Invalid weighting scheme: '%s'." % scheme)
+    # Re-shape the retrieved weights so that they are broadcastable to the
+    # shape of the input arrays. This just involves adding any additional
+    # singleton dimensions to the right of the last weights dimension.
+    rightdims = len(dataset.shape) - dataset.getAxisIndex(dimtoindex) - 1
+    weights = weights.reshape(weights.shape + (1,)*rightdims)
+    return weights
 
 def _covcor_dimensions(pcsaxes, fieldaxes):
     """

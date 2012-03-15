@@ -15,13 +15,12 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
-import warnings
-
 import cdms2
 import numpy
 
 from eofsolve import EofSolver
-from errors import EofError
+from tools import weights_array
+from errors import EofError, EofToolError
 
 
 class Eof(object):
@@ -37,8 +36,8 @@ class Eof(object):
         Required argument:
         dataset -- cdms2 transient variable containing the data to be
             decomposed. Time must be the first dimension. Missing values
-            are allowed provided that they are constant with time (ie.
-            values of an oceanographic variable over land).
+            are allowed provided that they are constant with time (eg.
+            values of an oceanographic field over land).
         
         Optional arguments:
         weights -- Sets the weighting method. Defaults to no weighting.
@@ -48,7 +47,8 @@ class Eof(object):
                         total area. This is a standard weighting and
                         should be used if you are unsure.
 
-            'cos_lat' - Square-root of cosine of latitude.
+            'coslat'  - Square-root of cosine of latitude ('cos_lat' is
+                        also accepted).
 
             'none'    - Equal weights for all grid points (default).
 
@@ -100,108 +100,18 @@ class Eof(object):
         if weights in ("none", None):
             # No weights requested, set the weight array to None.
             wtarray = None
-        elif weights == "area":
-            # Area weighting is requested, retrieve the grid weights from the
-            # dataset and compute appropriate area weights.
-            grid = dataset.getGrid()
-            try:
-                latw, lonw = grid.getWeights()
-            except AttributeError:
-                raise EofError("Automatic weighting with '%s' requires a grid." % weights)
-            # Check that the last two dimensions are latitude and longitude
-            # and if they are reversed.
-            if order[-2:] not in ("xy", "yx"):
-                raise EofError("'%s' weighting scheme requires latitude and longitude are the last dimensions." % weights)
-            # Create the weights array from the latitude and longitude
-            # weights.
-            if order[-2:] == "yx":
-                # Latitude before longitude.
-                wtarray = numpy.outer(latw, lonw)
-            else:
-                # Longitude before latitude.
-                wtarray = numpy.outer(lonw, latw)
-            # Normalize by the sum of the weights and take the square-root.
-            # These weights produce the same results as the Climate Data
-            # Operators version 1.5.0.
-            wtarray /= wtarray.sum()
-            wtarray = numpy.sqrt(wtarray)
-        elif weights in ("cos_lat", "coslat"):
-            # Square-root of cosine of latitude weights are requested, compute
-            # the latitude weights from the dataset's latitude dimension. Get
-            # the latitude values and compute the square-root of the cosine of
-            # the latitude values.
-            try:
-                latvals = dataset.getLatitude()[:]
-                coslat = numpy.cos(numpy.deg2rad(latvals))
-                # Cosine of latitude may be negative when latitude is near 90
-                # degrees North due to truncation error, account for that.
-                coslat[numpy.where(coslat < 0)] = 0.
-                latw = numpy.sqrt(coslat)
-            except (TypeError, AttributeError):
-                raise EofError("'%s' weighting scheme requires a latitude dimension." % weights)
-            # If 90 or -90 are in the latitude dimension then inaccurate
-            # floating point representations may cause the weight to be NaN,
-            # since the cosine of 90+dx or -90-dx will be negative, and hence
-            # cannot be square-rooted. To safeguard against this we replace
-            # NaNs with 0, which is the correct value for this case.
-            latw[numpy.where(numpy.isnan(latw))] = 0.
-            # The shape of the weights array depends on the position of the
-            # latitude dimension and the presence of a longitude dimension.
-            if "x" in order:
-                # A longitude dimension is present, make sure latitude and
-                # longitude are the last two dimensions.
-                if order[-2:] not in ("xy", "yx"):
-                    raise EofError("'%s' weighting scheme requires latitude and longitude are the last dimensions." % weights)
-                # Find how many longitude values are present and create an
-                # array of ones the same shape.
-                nlons = len(dataset.getLongitude()[:])
-                lonw = numpy.ones(nlons)
-                # Create the weights array from the latitude and longitude
-                # weights.
-                if order[-2:] == "yx":
-                    # Latitude before longitude.
-                    wtarray = numpy.outer(latw, lonw)
-                else:
-                    # Longitude before latitude.
-                    wtarray = numpy.outer(lonw, latw)
-            else:
-                # A longitude dimension is not present, make sure latitude is
-                # the last dimension.
-                if order[-1] != "y":
-                    # Latitude must be last when no longitude.
-                    raise EofError("'%s' weighting scheme requires latitude and longitude are the last dimensions." % weights)
-                # Just use a weight array the same dimensionality as the
-                # latitude dimension.
-                wtarray = latw
-        elif weights == "default":
-            # The deprecated 'default' weighting scheme is requested. Issue a
-            # warning and then produce weights with this normalization.
-            warnings.warn("'default' weighting scheme is deprecated, use 'cos_lat'")
-            # Retrieve the grid weights from the dataset and compute
-            # appropriate area weights.
-            grid = dataset.getGrid()
-            try:
-                latw, lonw = grid.getWeights
-            except AttributeError:
-                raise EofError("Automatic weighting with '%s' requires a grid." % weights)
-            latw /= numpy.maximum.reduce(latw)
-            lonw /= numpy.maximum.reduce(lonw)
-            latw = numpy.sqrt(latw)
-            # Check that the last two dimensions are latitude and longitude
-            # and if they are reversed.
-            if order[-2:] not in ("xy", "yx"):
-                raise EofError("'%s' weighting scheme requires latitude and longitude are the last dimensions." % weights)
-            if order[-2:] == "yx":
-                wtarray = numpy.outer(latw, lonw)
-            else:
-                wtarray = numpy.outer(lonw, latw)
         else:
-            # If weights is specified but does not match any of the prescribed
-            # values then it would be the right thing to assume it is an array
-            # of weights to be applied. If the weights are not a compatible
-            # shape or type then the EofSolver object will raise the relevant
-            # exception. 
-            wtarray = weights
+            try:
+                # Generate a weights array of the appropriate kind, with a
+                # shape compatible with the data set.
+                scheme = weights.lower()
+                wtarray = weights_array(dataset, scheme=scheme)
+            except AttributeError:
+                # Weights is not a string, assume it is an array.
+                wtarray = weights
+            except EofToolError, err:
+                # Weights is not recognized, raise an error.
+                raise EofError(err)
         # Cast the wtarray to the same type as the dataset. This prevents the
         # promotion of 32-bit input to 64-bit on multiplication with the
         # weight array when not required. This will fail with a AttributeError
