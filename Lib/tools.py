@@ -29,7 +29,6 @@ def _rootcoslat_weights(latdim):
     rightdims -- Number of dimensions to the right of the latitude
             dimension.
     """
-    print 'computing coslat weights'
     coslat = numpy.cos(numpy.deg2rad(latdim))
     coslat[numpy.where(coslat < 0)] = 0.
     latw = numpy.sqrt(coslat)
@@ -38,7 +37,6 @@ def _rootcoslat_weights(latdim):
 
 
 def _area_weights(grid, gridorder):
-    print 'computing area weights'
     latw, lonw = grid.getWeights()
     if gridorder == 'xy':
         wtarray = numpy.outer(lonw, latw)
