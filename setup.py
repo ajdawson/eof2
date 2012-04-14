@@ -1,4 +1,4 @@
-"""Build and install the windfield package.
+"""Build and install the eof2 package.
 
 """
 # (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved. 
@@ -22,7 +22,7 @@ from distutils.core import setup
 
 setup(
     name="eof2",
-    version="1.2",
+    version="1.3",
     description="EOF analysis.",
     author="Andrew Dawson",
     author_email="dawson@atm.ox.ac.uk",
