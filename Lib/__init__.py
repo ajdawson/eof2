@@ -1,4 +1,4 @@
-"""fast and efficient EOF analysis for CDAT and Python"""
+"""Fast and efficient EOF analysis for Python"""
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
@@ -17,29 +17,33 @@
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 from errors import EofError, EofToolError
 
+
 # Define the objects imported by imports of the form: from eof2 import *
 __all__ = ["EofError", "EofToolError"]
 
 try:
-    # Attempt to import the EofSolver object. If this is successful, add
-    # the EofSolver object to the __all__ list. Also imports the EofSolver
-    # alias EofNumPy for backward compatibility.
+    # Attempt to import the NumPy-only solver interfaces. These interfaces
+    # are required to use the software so importing them should not fail.
     from eofsolve import EofSolver, EofNumPy
     __all__.append("EofSolver")
     __all__.append("EofNumPy")
+    from eofmultisolve import MultipleEofSolver
+    __all__.append("MultipleEofSolver")
     # Also import the NumPy-only versions of the supplementary tools.
     import nptools
     __all__.append("nptools")
 except ImportError:
-    # If this fails the package cannot be used. An error should be
-    # raised.
+    # If this fails the package cannot be used. An error should be raised.
     raise EofError("eof2 requires NumPy.")
 
 try:
-    # Attempt to import the Eof object. If this is successful, add the
-    # Eof object to the __all__ list.
+    # Attempt to import the cdms2-enabled interfaces. These are not required,
+    # and are ignored if importing them fails, assuming the user does not have
+    # the cdms2 module available.
     from eofwrap import Eof
     __all__.append("Eof")
+    from eofmultiwrap import MultipleEof
+    __all__.append("MultipleEof")
     # Also import the cdms2 wrapped versions of the supplementary tools.
     import tools
     __all__.append("tools")
