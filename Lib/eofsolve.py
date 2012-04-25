@@ -1,10 +1,4 @@
-"""EOF decomposition of NumPy arrays
-
-This code is based on the svdeofs class from PyClimate. It has been
-heavily re-worked to allow for missing values. Other features have been
-added.
-
-"""
+"""EOF analysis for :py:mod:`numpy` array data."""
 # (c) Copyright 2000 Jon Saenz, Jesus Fernandez and Juan Zubillaga.
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
@@ -33,42 +27,61 @@ _NA = numpy.newaxis
 
 
 class EofSolver(object):
-    """EOF analysis object
-    
-    EOF analysis of NumPy arrays with missing data handling.
-
-    """
+    """EOF analysis (:py:mod:`numpy` interface)."""
 
     def __init__(self, dataset, missing=None, weights=None, center=True,
             ddof=1):
         """Create an EofSolver object.
+
+        The EOF solution is computed at initialization time. Method
+        calls are used to retrieve computed quantities.
+
+        **Arguments:**
         
-        Arguments:
-        dataset -- A NumPy array of two or more dimensions containing
-            the data to be decomposed. Time must be the first dimension.
+        *dataset*
+            A NumPy array of two or more dimensions containing the data
+            to be analyseddecomposed. Time must be the first dimension.
             Missing values are allowed provided that they are constant
             with time (ie. values of an oceanographic variable over
             land).
             
-        Optional arguments:
-        missing -- The missing value of the data set. Defaults to NaN.
-            If the input data set has numpy.nan as its missing value
-            then they will automatically be recognized and this option
-            is not required.
-        weights -- An array of weights whose shape is compatible with
-            that of the input data set. the weights can be the same
-            shape as the input data set or a shape compatible with a
-            NumPy array broadcast operation (ie. the shape of the
-            weights can match the rightmost parts of the shape of the
-            input data set). Defaults to None (no weighting).
-        center -- If True the mean along the first axis of the input
-            data set (the time-mean) will be removed prior to analysis.
-            If False the mean along the first axis will not be removed.
-            This option should only be set to False if you know what you
-            are doing and why. Defaults to True (mean is removed).
-        ddof -- 'Delta degrees of freedom'. The divisor used to
-            normalize the covariance matrix is N - ddof where N is the
-            number of samples. Defaults to 1.
+        **Optional arguments:**
+
+        *missing*
+            The missing value for the field. If not supplied (or set
+            to the value *None*) no particular value is assumed to be
+            missing. Note that if :py:attr:`numpy.nan` is used to
+            represent missing values then this option does not need to
+            be used as this case is handled automatically by the solver.
+
+        *weights*
+            An array of weights whose shape is compatible with those of
+            the input array *dataset*. The weights can have the same
+            shape as the input data set or a shape compatible with an
+            array broadcast operation (ie. the shape of the weights can
+            can match the rightmost parts of the shape of the input
+            array *dataset*). If the input array *dataset* does not
+            require weighting then the value *None* may be used.
+            Defaults to *None* (no weighting).
+
+        *center*
+            If *True*, the mean along the first axis of the input data
+            set (the time-mean) will be removed prior to analysis. If
+            *False*, the mean along the first axis will not be removed.
+            Defaults to *True* (mean is removed). Generally this option
+            should be set to *True* as the covariance interpretation
+            relies on input data being anomalies with a time-mean of 0.
+            A valid reson for turning this off would be if you have
+            already generated an anomaly data set. Setting to *True* has
+            the useful side-effect of propagating missing values along
+            the time-dimension, ensuring the solver will work even if
+            missing values occur at different locations at different
+            times.
+
+        *ddof*
+            'Delta degrees of freedom'. The divisor used to normalize
+            the covariance matrix is *N - ddof* where *N* is the
+            number of samples. Defaults to *1*.
 
         """
         # Store the input data in an instance variable.
@@ -138,37 +151,33 @@ class EofSolver(object):
         self.P = A * Lh
 
     def _center(self, in_array):
-        """Returns the input array centered about the first axis.
-        
-        Required argument:
-        in_array -- The array to centre.
-        
-        """
+        """Remove the mean of an array along the first dimension."""
         # Compute the mean along the first dimension.
-        mean = numpy.add.reduce(in_array) / float(len(in_array))
+        mean = in_array.mean(axis=0)
+#        mean = numpy.add.reduce(in_array) / float(len(in_array))
         # Return the input array with its mean along the first dimension
         # removed.
         return (in_array - mean)
 
     def pcs(self, pcscaling=0, npcs=None):
-        """Returns the principal components.
+        """Principal component time series (PCs).
         
-        Returns a numpy array where columns are the ordered principal
-        component time series expansions.
+        Returns an array where the columns are the ordered PCs.
         
-        Optional arguments:
-        pcscaling -- Sets the scaling of the principal components. The
-            following values are accepted:
-            0 - Un-scaled principal components.
-            1 - Principal components are divided by the square-root of
-                their eigenvalues. This results in PCs with unit
-                variance.
-            2 - Principal components are multiplied by the square-root
-                of their eigenvalues.
-            Defaults to 0 (un-scaled principal components).
-        npcs -- Number of principal components to return. Defaults to
-            all principal components.
+        **Optional arguments:**
 
+        *pcscaling*
+            Set the scaling of the retrieved PCs. The following
+            values are accepted:
+
+            * *0* : Un-scaled PCs (default).
+            * *1* : PCs are scaled to unit variance (divided by the
+              square-root of their eigenvalue).
+            * *2* : PCs are multiplied by the square-root of their
+              eigenvalue.
+
+        *npcs* : Number of PCs to retrieve. Defaults to all the PCs.
+        
         """
         slicer = slice(0, npcs)
         if pcscaling == 0:
@@ -184,20 +193,24 @@ class EofSolver(object):
             raise EofError("Invalid scaling option: %s." % repr(pcscaling))
 
     def eofs(self, eofscaling=0, neofs=None):
-        """Returns the empirical orthogonal functions.
+        """Empirical orthogonal functions (EOFs).
         
-        Returns a NumPy array with the ordered empirical orthogonal
-        functions along the first axis.
-        
-        Optional arguments:
-        eofscaling -- Sets the scaling of the EOFs. The following values
-            are accepted:
-            0 - Un-scaled EOFs.
-            1 - EOFs are divided by the square-root of their eigenvalues.
-            2 - EOFs are multiplied by the square-root of their
-                eigenvalues.
-            Defaults to 0 (un-scaled EOFs).
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
+        Returns an array with the ordered EOFs along the first
+        dimension.
+
+        **Optional arguments:**
+
+        *eofscaling*
+            Sets the scaling of the EOFs. The following values are
+            accepted:
+
+            * *0* : Un-scaled EOFs (default).
+            * *1* : EOFs are divided by the square-root of their
+              eigenvalues.
+            * *2* : EOFs are multiplied by the square-root of their
+              eigenvalues.
+              
+        *neofs* -- Number of EOFs to return. Defaults to all EOFs.
         
         """
         slicer = slice(0, neofs)
@@ -221,9 +234,11 @@ class EofSolver(object):
 
     def eigenvalues(self, neigs=None):
         """Eigenvalues (decreasing variances) associated with each EOF.
-
-        Optional argument:
-        neigs -- Number of eigenvalues to return. Defaults to all
+        
+        **Optional argument:**
+        
+        *neigs*
+            Number of eigenvalues to return. Defaults to all
             eigenvalues.
         
         """
@@ -236,10 +251,13 @@ class EofSolver(object):
 
     def eofsAsCorrelation(self, neofs=None):
         """
-        EOFs scaled as the correlation of the PCs with original field.
+        EOFs scaled as the correlation of the PCs with the original
+        field.
         
-        Optional argument:
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
+        **Optional argument:**
+        
+        *neofs*
+            Number of EOFs to return. Defaults to all EOFs.
         
         """
         # Correlation of the original dataset with the PCs is identical to:
@@ -267,19 +285,23 @@ class EofSolver(object):
 
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
         """
-        EOFs scaled as the covariance of the PCs with original field.
+        EOFs scaled as the covariance of the PCs with the original
+        field.
 
-        Optional arguments:
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
-        pcscaling -- Sets the scaling of the principal components. The
+        **Optional arguments:**
+        
+        *neofs*
+            Number of EOFs to return. Defaults to all EOFs.
+        
+        *pcscaling*
+            Set the scaling of the PCs used to compute covariance. The
             following values are accepted:
-            0 - Un-scaled principal components.
-            1 - Principal components are divided by the square-root of
-                their eigenvalues. This results in PCs with unit
-                variance.
-            2 - Principal components are multiplied by the square-root
-                of their eigenvalues.
-            Defaults to 1 (standardised principal components).
+
+            * *0* : Un-scaled PCs.
+            * *1* : PCs are scaled to unit variance (divided by the
+              square-root of their eigenvalue) (default).
+            * *2* : PCs are multiplied by the square-root of their
+              eigenvalue.
 
         """
         if pcscaling not in (1, 2, 3):
@@ -326,12 +348,16 @@ class EofSolver(object):
         return eofsv
         
     def varianceFraction(self, neigs=None):
-        """
-        Fraction of the total variance explained by each principal mode.
+        """Fractional EOF variances.
+        
+        The fraction of the total variance explained by each EOF. This
+        is a value between 0 and 1 inclusive.
 
-        Optional argument:
-        neigs -- Number of eigenvalues to return the fractional variance
-            for. Defaults to all eigenvalues.
+        **Optional argument:**
+
+        *neigs*
+            Number of eigenvalues to return the fractional variance for.
+            Defaults to all eigenvalues.
         
         """
         # Return the array of eigenvalues divided by the sum of the
@@ -351,13 +377,16 @@ class EofSolver(object):
     def reconstructedField(self, neofs):
         """Reconstructed data field based on a subset of EOFs.
 
-        If weights were passed to the EofSolver object then the returned
-        reconstructed field will be automatically un-weighted. Otherwise
-        the returned reconstructed field will  be weighted in the same
-        manner as the input to the EofSolver object.
+        If weights were passed to the :py:class:`~eof2.EofSolver`
+        instance then the returned reconstructed field will be
+        automatically un-weighted. Otherwise the returned reconstructed
+        field will  be weighted in the same manner as the input to the
+        :py:class:`~eof2.EofSolver` instance.
         
-        Argument:
-        neofs -- Number fo EOFs to use for the reconstruction.
+        **Argument:**
+        
+        *neofs*
+            Number of EOFs to use for the reconstruction.
         
         """
         # Project principal components onto the EOFs to compute the
@@ -374,25 +403,33 @@ class EofSolver(object):
         return rval
 
     def northTest(self, neigs=None, vfscaled=False):
-        """Returns typical errors for eigenvalues.
+        """Typical errors for eigenvalues.
         
-        Uses the method of North et al. (1982) to compute the typical
+        The method of North et al. (1982) is used to compute the typical
         error for each eigenvalue. It is assumed that the number of
         times in the input data set is the same as the number of
         independent realizations. If this assumption is not valid then
-        the results of this method may be inappropriate.
+        the result may be inappropriate.
+
+        **Optional arguments:**
         
-        Optional arguments:
-        neigs -- The number of eigenvalues to return typical errors for.
+        *neigs*
+            The number of eigenvalues to return typical errors for.
             Defaults to typical errors for all eigenvalues.
-        vfscaled -- If True scale the errors by the sum of the
-            eigenvalues. This yields typical errors with the same scale
-            as the values returned by the 'varianceFraction' method. If
-            False then no scaling is done. Defaults to no scaling.
+            
+        *vfscaled*
+            If *True* scale the errors by the sum of the eigenvalues.
+            This yields typical errors with the same scale as the
+            values returned by the
+            :py:meth:`~eof2.EofSolver.varianceFraction` method. If
+            *False* then no scaling is done. Defaults to *False* (no
+            scaling).
         
-        North, G. R., T. L. Bell, R. F. Cahalan, and F. J. Moeng, 1982,
-            "Sampling errors in the estimation of empirical orthogonal
-            functions", Monthly Weather Review, 110, pages 669-706.
+        **References**
+
+        North, G. R., T. L. Bell, R. F. Cahalan, and F. J. Moeng, 1982:
+        "Sampling errors in the estimation of empirical orthogonal
+        functions", *Monthly Weather Review*, **110**, pages 669-706.
         
         """
         slicer = slice(0, neigs)
@@ -407,46 +444,61 @@ class EofSolver(object):
         return self.L[slicer] * factor
 
     def getWeights(self):
-        """Return the weights used for the analysis."""
+        """Weights used for the analysis."""
         return self.weights
 
     def projectField(self, field, missing=None, neofs=None, eofscaling=0,
             weighted=True, notime=False):
         """Project a field onto the EOFs.
         
-        Projects a field onto the EOFs, or a subset of the EOFS,
-        associated with this instance. The field must have the same
-        spatial dimensions as the field used to initialize the EofSolver
-        object, but may have a different length time dimension. Missing
-        values must be in the same places as in the original field also.
+        Given a field, projects it onto the EOFs to generate a
+        corresponding set of time series. The field can be projected
+        onto all the EOFs or just a subset. The field must have the same
+        corresponding spatial dimensions (including missing values in
+        the same places) as the original input to the
+        :py:class:`~eof2.MultipleEofSolver` instance. The field may have a
+        different length time dimension to the original input field (or
+        no time dimension at all).
+        
+        **Argument:**
+        
+        *field*
+            A field to project onto the EOFs.
 
-        Argument:
-        field -- NumPy array of data values to project onto EOFs. Must
-            have the same dimensionality as the input to the EofSolver
-            object except for the leading time dimension which may be
-            any length.
-        
-        Optional arguments:
-        missing -- The missing value of the data set. Defaults to NaN.
-            If the input data set has numpy.nan as its missing value
-            then they will automatically be recognized and this option
-            is not required.
-        neofs -- Number of EOFs to project onto. Defaults to all EOFs.
-        eofscaling -- Sets the scaling of the EOFs. The following values
-            are accepted:
-            0 - Un-scaled EOFs.
-            1 - EOFs are divided by the square-root of their eigenvalues.
-            2 - EOFs are multiplied by the square-root of their
-                eigenvalues.
-            Defaults to 0 (un-scaled EOFs).
-        weighted -- If True then the EOFs are weighted prior to the
-            projection. If False then no weighting is applied. Defaults
-            to True (weighting is applied).
-        notime -- If True indicates that the input field has no time
-            dimension and should be treated as spatial data. If False
-            then the input field will be treated as spatial-temporal
-            data. Defaults to False (spatial-temporal data).
-        
+        **Optional arguments:**
+
+        *missing*
+            The missing value for the field. If not supplied no
+            particular value is assumed to be missing. Note that if
+            :py:attr:`numpy.nan` is used to represent missing values
+            then this option does not need to be used as this case is
+            handled automatically by the solver.
+
+        *neofs*
+            Number of EOFs to project onto. Defaults to all EOFs.
+
+        *eofscaling*
+            Set the scaling of the EOFs that are projected
+            onto. The following values are accepted:
+
+            * *0* : Un-scaled EOFs (default).
+            * *1* : EOFs are divided by the square-root of their eigenvalue.
+            * *2* : EOFs are multiplied by the square-root of their
+              eigenvalue.
+
+        *weighted*
+            If *True* then the EOFs are weighted prior to projection. If
+            *False* then no weighting is applied. Defaults to *True*
+            (weighting is applied). Generally only the default setting
+            should be used.
+
+        *notime*
+            If *True*, indicates that the input field has no time
+            dimension and should be treated as spatial data. If *False*
+            then the first dimension of the field will be assumed to be
+            a time dimension. Defaults to *False* (a time dimension is
+            assumed).
+                
         """
         # Create a slice object for truncating the EOFs.
         slicer = slice(0, neofs)

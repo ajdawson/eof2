@@ -1,4 +1,4 @@
-"""Multiple EOF analysis for NumPy array data."""
+"""Multiple EOF analysis for :py:mod:`numpy` array data."""
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
@@ -22,7 +22,7 @@ from errors import EofError
 
 
 class MultipleEofSolver(object):
-    """Multiple EOF analysis (NumPy interface)."""
+    """Multiple EOF analysis (:py:mod:`numpy` interface)."""
 
     def __init__(self, *datasets, **kwargs): 
         """Create a MultipleEofSolver object.
@@ -44,11 +44,12 @@ class MultipleEofSolver(object):
         *missing*
             The missing values of the data sets. This may be specified
             as a single value applied to all input arrays or a sequence
-            of values, one for each array. Specifying None as the
-            missing value for a dataset means no missing values will be
-            checked for. If the input data set uses :py:attr:`numpy.nan`
+            of values, one for each array in *\*datasets*. If the value
+            is specified as *None* then no particular value is assumed
+            to be missing for the corresponding array in *\*datasets*.
+            If an input array in *\*datasets* uses :py:attr:`numpy.nan`
             as its missing value then they will automatically be handled
-            correctly and this option is not required.
+            correctly by the solver and this option is not required.
 
         *weights*
             A sequence of arrays of weights whose shapes are compatible
@@ -216,7 +217,8 @@ class MultipleEofSolver(object):
     def eofs(self, eofscaling=0, neofs=None):
         """Empirical orthogonal functions (EOFs).
         
-        Returns arrays with the ordered EOFs along the first axis.
+        Returns arrays with the ordered EOFs along the first
+        dimension.
         
         **Optional arguments:**
 
@@ -237,9 +239,7 @@ class MultipleEofSolver(object):
         return self._unwrap(modes)
 
     def eigenvalues(self, neigs=None):
-        """
-        Eigenvalues (decreasing variances) associated with each EOF.
-        each EOF.
+        """Eigenvalues (decreasing variances) associated with each EOF.
 
         **Optional argument:**
         
@@ -252,7 +252,8 @@ class MultipleEofSolver(object):
 
     def eofsAsCorrelation(self, neofs=None):
         """
-        EOFs scaled as the correlation of the PCs with original field.
+        EOFs scaled as the correlation of the PCs with the original
+        field.
         
         **Optional argument:**
         
@@ -265,7 +266,8 @@ class MultipleEofSolver(object):
 
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
         """
-        EOFs scaled as the covariance of the PCs with original field.
+        EOFs scaled as the covariance of the PCs with the original
+        field.
 
         **Optional arguments:**
         
@@ -331,11 +333,11 @@ class MultipleEofSolver(object):
     def northTest(self, neigs=None, vfscaled=False):
         """Typical errors for eigenvalues.
         
-        Uses the method of North et al. (1982) to compute the typical
+        The method of North et al. (1982) is used to compute the typical
         error for each eigenvalue. It is assumed that the number of
         times in the input data set is the same as the number of
         independent realizations. If this assumption is not valid then
-        the results of this method may be inappropriate.
+        the result may be inappropriate.
         
         **Optional arguments:**
         
@@ -347,7 +349,7 @@ class MultipleEofSolver(object):
             If *True* scale the errors by the sum of the eigenvalues.
             This yields typical errors with the same scale as the
             values returned by the
-            :py:method:`~eof2.MultipleEofSolver.varianceFraction`
+            :py:meth:`~eof2.MultipleEofSolver.varianceFraction`
             method. If *False* then no scaling is done. Defaults to
             *False* (no scaling).
         
@@ -361,7 +363,7 @@ class MultipleEofSolver(object):
         return self.eofobj.northTest(neigs, vfscaled)
 
     def getWeights(self):
-        """Return the weights used for the analysis."""
+        """Weights used for the analysis."""
         w = self.eofobj.getWeights()
         return self._unwrap(w)
 
@@ -381,18 +383,20 @@ class MultipleEofSolver(object):
         **Argument:**
         
         *\*fields*
-            One or more fields to project onto the EOFs. Must
-            be the same as the number of fields used to initialize the
-            `MultipleEofSolver`.
+            One or more fields to project onto the EOFs. The number of
+            fields must be the same as the number of fields used to
+            initialize the :py:class:`~eof2.MultipleEofSolver`
+            instance.
 
         **Optional arguments:**
 
         *missing*
             The missing value for all fields, or a list of the
             missing value for each field. If not supplied no particular
-            value is assumed to be missing. Note that if `numpy.nan` is used
-            to represent missing values then this option does not need to be
-            used as this case is handled automatically by the solver.
+            value is assumed to be missing. Note that if 
+            :py:attr:`numpy.nan` is used to represent missing values
+            then this option does not need to be used as this case is
+            handled automatically by the solver.
 
         *neofs*
             Number of EOFs to project onto. Defaults to all EOFs.
@@ -407,16 +411,17 @@ class MultipleEofSolver(object):
               eigenvalue.
 
         *weighted*
-            If *True* then the EOFs are weighted prior to
-            projection. If False the no weighting is applied. Defaults to
-            True (weighting is applied). Generally only the default setting
+            If *True* then the EOFs are weighted prior to projection. If
+            *False* then no weighting is applied. Defaults to *True*
+            (weighting is applied). Generally only the default setting
             should be used.
 
         *notime*
-            If True, indicates that the input fields have no time
-            dimension and should be treated as spatial data. If False then
-            the first dimension of each input field will be assumed to be a
-            time dimension. Defaults to False (a time dimension is assumed).
+            If *True*, indicates that the input fields have no time
+            dimension and should be treated as spatial data. If *False*
+            then the first dimension of each input field will be assumed
+            to be a time dimension. Defaults to *False* (a time
+            dimension is assumed).
                 
         """
         if len(fields) != self._ndatasets:

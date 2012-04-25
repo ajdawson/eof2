@@ -1,4 +1,7 @@
-"""supplementary tools related to EOF analysis"""
+"""
+Supplementary tools for the meta-data enabled EOF analysis interface.
+
+"""
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
@@ -24,10 +27,11 @@ from nptools import correlation_map as _npcormap
 
 
 def _rootcoslat_weights(latdim):
-    """
-    latdim -- Latitude dimension.
-    rightdims -- Number of dimensions to the right of the latitude
-            dimension.
+    """Square-root of cosine of latitude weights.
+
+    *latdim*
+       Latitude dimension values.
+
     """
     coslat = numpy.cos(numpy.deg2rad(latdim))
     coslat[numpy.where(coslat < 0)] = 0.
@@ -37,6 +41,15 @@ def _rootcoslat_weights(latdim):
 
 
 def _area_weights(grid, gridorder):
+    """Area weights.
+
+    *grid*
+        :py:mod:`cdms2` grid.
+
+    *gridorder*
+        Either "xy" or "yx".
+
+    """
     latw, lonw = grid.getWeights()
     if gridorder == 'xy':
         wtarray = numpy.outer(lonw, latw)
@@ -48,19 +61,35 @@ def _area_weights(grid, gridorder):
 
 
 def weights_array(dataset, scheme='area'):
-    """Compute weights for a variable.
+    """Weights for a data set on a grid.
     
-    The returned weights will be broadcastable against the input data
-    array.
+    Returned weights are a :py:attr:`numpy.ndarray` broadcastable
+    against the input data shape.
     
-    Argument:
-    dataset -- A cdms2 variable to generate weights for.
+    **Arguments:**
 
-    Keyword argument:
-    scheme -- The weighting scheme to use. Can be one of:
-                'coslat'/'cos_lat': Square-root of cosine of latitude.
-                'area': Normalized area weights.
-            Defaults to normalized area weights.
+    *dataset*
+        A :py:mod:`cdms2` variable to generate weights for.
+
+    **Optional arguments:**
+
+    *scheme*
+        Weighting scheme to use. The following values are accepted:
+
+        * *"coslat"* : Square-root of cosine of latitude. The value
+          *"cos_lat"* is accepted as an alias.
+        * *"area"* : Normalized area weights (default).
+
+    **Examples:**
+
+    Area weights for a :py:mod:`cdms2` variable on 2D grid:
+
+    >>> wts = weights_array(var2d, scheme="area")
+
+    Square-root of cosine of latitude weights for a :py:mod:`cdms2`
+    variable with a latitude dimension:
+
+    >>> wts = weights_array(var, scheme="coslat")
 
     """
     # A re-usable generic error message for the function. When raising an
@@ -122,17 +151,31 @@ def _covcor_dimensions(pcsaxes, fieldaxes):
 
 
 def correlation_map(pcs, field):
-    """
-    Maps of the correlation between a set of PCs and a spatial-temporal
-    field.
+    """Correlation maps for a set of PCs and a spatial-temporal field.
+
+    Given a set of PCs in a :py:mod:`cdms2` variable (e.g., as output
+    from :py:meth:`eof2.Eof.pcs`) and a spatial-temporal field in a
+    :py:mod:`cmds2` variable, one correlation map per PC is computed.
 
     The field must have the same temporal dimension as the PCs. Any
     number of spatial dimensions (including zero) are allowed in the
     field and there can be any number of PCs.
 
-    Arguments:
-    pcs -- Array of PCs with time as the first dimension.
-    field -- 1D or 2D field with time as the first dimension.
+    **Arguments:**
+
+    *pcs*
+        PCs in a :py:mod:`cdms2` variable.
+
+    *field*
+        Spatial-temporal field in a :py:mod:`cdms2` variable.
+
+    **Examples:**
+
+    Assuming *eofobj* is an instance of :py:class:`~eof2.Eof`, compute
+    correlation maps for each PC:
+
+    >>> pcs = eofobj.pcs(pcscaling=1)
+    >>> cormaps = correlation_map(pcs, field)
 
     """
     cor = _npcormap(pcs.asma(), field.asma())
@@ -148,22 +191,38 @@ def correlation_map(pcs, field):
 
 
 def covariance_map(pcs, field, ddof=1):
-    """
-    Maps of the covariance between a set of PCs and a spatial-temporal
-    field.
+    """Covariance maps for a set of PCs and a spatial-temporal field.
+
+    Given a set of PCs in a :py:mod:`cdms2` variable (e.g., as output
+    from :py:meth:`eof2.Eof.pcs`) and a spatial-temporal field in a
+    :py:mod:`cmds2` variable, one covariance map per PC is computed.
 
     The field must have the same temporal dimension as the PCs. Any
     number of spatial dimensions (including zero) are allowed in the
     field and there can be any number of PCs.
 
-    Arguments:
-    pcs -- Array of PCs with time as the first dimension.
-    field -- 1D or 2D field with time as the first dimension.
+    **Arguments:**
 
-    Optional argument:
-    ddof -- 'Delta degrees of freedom'. The divisor used to normalize
-            the covariance is N - ddof where N is the number of samples.
-            Defaults to 1.
+    *pcs*
+        PCs in a :py:mod:`cdms2` variable.
+
+    *field*
+        Spatial-temporal field in a :py:mod:`cdms2` variable.
+
+    **Optional arguments:**
+
+    *ddof*
+        'Delta degrees of freedom'. The divisor used to normalize
+        the covariance matrix is *N - ddof* where *N* is the
+        number of samples. Defaults to *1*.
+        
+    **Examples:**
+
+    Assuming *eofobj* is an instance of :py:class:`~eof2.Eof`, compute
+    covariance maps for each PC:
+
+    >>> pcs = eofobj.pcs(pcscaling=1)
+    >>> covmaps = covariance_map(pcs, field)
 
     """
     cov = _npcovmap(pcs.asma(), field.asma(), ddof=ddof)

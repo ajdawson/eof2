@@ -28,7 +28,10 @@ from errors import EofError, EofToolError
 
 
 class MultipleEof(object):
-    """Multiple EOF analysis (meta-data enabled `cdms2` interface)."""
+    """
+    Multiple EOF analysis (meta-data enabled :py:mod:`cdms2` interface).
+    
+    """
 
     def __init__(self, *datasets, **kwargs):
         """Create a MultipleEof object.
@@ -51,19 +54,21 @@ class MultipleEof(object):
             Sets the weighting method. The following values are
             accepted:
 
-            * *'area'* : Square-root of grid cell area normalized by
-              total area. Required a latitude-longitude grid to be
-              present in the corresponding :py:mod:`cdms2` variable.
-              This is a fairly standard weighting strategy. If you are
-              unsure which method to use and you have gridded data then
-              this should be your first choice.
+            * *"area"* : Square-root of grid cell area normalized by
+              total area. Requires a latitude-longitude grid to be
+              present in the corresponding :py:mod:`cdms2` variable
+              in *\*datasets*. This is a fairly standard weighting
+              strategy. If you are unsure which method to use and you
+              have gridded data then this should be your first choice.
 
-            * *'coslat'* : Square-root of cosine of latitude
-              (*'cos_lat'* is also accepted).
+            * *"coslat"* : Square-root of cosine of latitude
+              (*"cos_lat"* is also accepted). Requires a latitude
+              dimension to be present in the corresponding
+              :py:mod:`cmds2` variable in *\*datasets*.
 
-            * *'none'* : Equal weights for all grid points (default).
+            * *"none"* : Equal weights for all grid points (default).
 
-            * *None* : Same as *'none'*.
+            * *None* : Same as *"none"*.
 
              A sequence of values may be passed to use different
              weighting for each data set. Arrays of weights may also
@@ -71,7 +76,7 @@ class MultipleEof(object):
 
         *center*
             If *True*, the mean along the first axis of the input data
-            set (the time-mean) will be removed prior to analysis. If
+            sets (the time-mean) will be removed prior to analysis. If
             *False*, the mean along the first axis will not be removed.
             Defaults to *True* (mean is removed). Generally this option
             should be set to *True* as the covariance interpretation
@@ -90,10 +95,10 @@ class MultipleEof(object):
 
         **Examples:**
 
-        EOF analysis with area-weighting for the input fields:
+        EOF analysis with area-weighting using two input fields:
 
         >>> from eof2 import Eof
-        >>> eofobj = Eof(field1, field2, weights="area")
+        >>> eofobj = Eof(field_a, field_b, weights="area")
 
         """
         # Handle keyword arguments manually.
@@ -160,7 +165,7 @@ class MultipleEof(object):
     def pcs(self, pcscaling=0, npcs=None):
         """Principal component time series (PCs).
 
-        Returns the ordered principal component time series expansions.
+        Returns the ordered PCs in a :py:mod:`cdms2` variable.
         
         **Optional arguments:**
 
@@ -199,7 +204,7 @@ class MultipleEof(object):
     def eofs(self, eofscaling=0, neofs=None):
         """Empirical orthogonal functions (EOFs).
         
-        Returns variables with the ordered EOFs along the first axis.
+        Returns the ordered EOFs in :py:mod:`cdms2` variables.
         
         **Optional arguments:**
 
@@ -219,11 +224,11 @@ class MultipleEof(object):
 
         All EOFs with no scaling:
 
-        >>> eofs = eofobj.eofs()
+        >>> eofs_a, eofs_b = eofobj.eofs()
 
         First 3 EOFs with scaling applied:
 
-        >>> eofs = eofobj.eofs(neofs=3, eofscaling=1)
+        >>> eofs_a, eofs_b = eofobj.eofs(neofs=3, eofscaling=1)
 
         """
         eofset = self.eofobj.eofs(eofscaling, neofs)
@@ -240,9 +245,9 @@ class MultipleEof(object):
         return eofset
 
     def eigenvalues(self, neigs=None):
-        """
-        Eigenvalues (decreasing variances) associated with each EOF.
-        each EOF.
+        """Eigenvalues (decreasing variances) associated with each EOF.
+
+        Returns the ordered eigenvalues in a :py:mod:`cdms2` variable.
 
         **Optional argument:**
         
@@ -271,22 +276,31 @@ class MultipleEof(object):
 
     def eofsAsCorrelation(self, neofs=None):
         """
-        EOFs scaled as the correlation of the PCs with original field.
+        EOFs scaled as the correlation of the PCs with the original
+        field.
+
+        Returns the ordered correlation EOFs in :py:mod:`cdms2`
+        variables.
         
         **Optional argument:**
         
         *neofs*
             Number of EOFs to return. Defaults to all EOFs.
         
+        **Note:**
+        
+        These are only the EOFs expressed as correlation and are not
+        related to EOFs computed using the correlation matrix.
+
         **Examples:**
 
         All EOFs:
 
-        >>> eofs = eofobj.eofsAsCorrelation()
+        >>> eofs_a, eofs_b = eofobj.eofsAsCorrelation()
 
         The leading EOF:
 
-        >>> eof1 = eofobj.eofsAsCorrelation(neofs=1)
+        >>> eof1_a, eof1_b = eofobj.eofsAsCorrelation(neofs=1)
         
         """
         eofset = self.eofobj.eofsAsCorrelation(neofs)
@@ -303,8 +317,12 @@ class MultipleEof(object):
 
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
         """
-        EOFs scaled as the covariance of the PCs with original field.
+        EOFs scaled as the covariance of the PCs with the original
+        field.
 
+        Returns the ordered covariance EOFs in :py:mod:`cdms2`
+        variables.
+        
         **Optional arguments:**
         
         *neofs*
@@ -324,15 +342,15 @@ class MultipleEof(object):
         
         All EOFs:
 
-        >>> eofs = eofobj.eofsAsCovariance()
+        >>> eofs_a, eofs_b = eofobj.eofsAsCovariance()
 
         The leading EOF:
 
-        >>> eof1 = eofobj.eofsAsCovariance(neofs=1)
+        >>> eof1_a, eof1_b = eofobj.eofsAsCovariance(neofs=1)
 
         The leading EOF using un-scaled PCs:
 
-        >>> eof1 = eofobj.eofsAsCovariance(neofs=1, pcscaling=0)
+        >>> eof1_a, eof1_b = eofobj.eofsAsCovariance(neofs=1, pcscaling=0)
         
         """
         eofset = self.eofobj.eofsAsCovariance(neofs)
@@ -350,8 +368,8 @@ class MultipleEof(object):
     def varianceFraction(self, neigs=None):
         """Fractional EOF variances.
         
-        The fraction of the total variance explained by each EOF. This
-        is a value between 0 and 1 inclusive.
+        The fraction of the total variance explained by each EOF, a
+        value between 0 and 1 inclusive, in a :py:mod:`cdms2` variable.
 
         **Optional argument:**
 
@@ -396,10 +414,10 @@ class MultipleEof(object):
         """Reconstructed data field based on a subset of EOFs.
 
         If weights were passed to the :py:class:`~eof2.MultipleEof`
-        instance then the returned reconstructed field will be
+        instance then the returned reconstructed fields will be
         automatically un-weighted. Otherwise the returned reconstructed
         field will  be weighted in the same manner as the input to the
-        :py:class:`~eof2.EofSolver` instance.
+        :py:class:`~eof2.MultipleEof` instance.
         
         **Argument:**
         
@@ -410,7 +428,7 @@ class MultipleEof(object):
 
         Reconstruct the input fields using 3 EOFs.
 
-        >>> rfields = eofobj.reconstructedField(neofs=3)
+        >>> rfield_a, rfield_b = eofobj.reconstructedField(neofs=3)
         
         """
         rfset = self.eofobj.reconstructedField(neofs)
@@ -425,12 +443,15 @@ class MultipleEof(object):
     def northTest(self, neigs=None, vfscaled=False):
         """Typical errors for eigenvalues.
         
-        Uses the method of North et al. (1982) to compute the typical
+        Returns the typical error for each eigenvalue in a
+        :py:mod:`cdms2` variable.
+
+        The method of North et al. (1982) is used to compute the typical
         error for each eigenvalue. It is assumed that the number of
         times in the input data set is the same as the number of
         independent realizations. If this assumption is not valid then
-        the results of this method may be inappropriate.
-        
+        the result may be inappropriate.
+
         **Optional arguments:**
         
         *neigs*
@@ -441,9 +462,9 @@ class MultipleEof(object):
             If *True* scale the errors by the sum of the eigenvalues.
             This yields typical errors with the same scale as the
             values returned by the
-            :py:method:`~eof2.MultipleEofSolver.varianceFraction`
-            method. If *False* then no scaling is done. Defaults to
-            *False* (no scaling).
+            :py:meth:`~eof2.MultipleEof.varianceFraction` method.
+            If *False* then no scaling is done. Defaults to *False* (no
+            scaling).
         
         **References**
 
@@ -474,11 +495,11 @@ class MultipleEof(object):
     def projectField(self, *fields, **kwargs):
         """Project a set of fields onto the EOFs.
         
-        Given a set of fields, projects them onto the EOFs to generate
-        a corresponding set of time series. Fields can be projected onto
-        all the EOFs or just a subset. There must be the same number of 
-        fields as were originally input into the
-        :py:class:`~eof2.MultipleEofSolver` instance, and each field
+        Given a set of fields, projects them onto the EOFs to generate a
+        a corresponding set of time series in a :py:mod:`cdms2` variable.
+        Fields can be projected onto all the EOFs or just a subset. There
+        must be the same number of fields as were originally input into
+        the :py:class:`~eof2.MultipleEofSolver` instance, and each field
         must have the same corresponding spatial dimensions (including
         missing values in the same places). The fields may have a
         different length time dimension to the original input fields (or
@@ -487,9 +508,10 @@ class MultipleEof(object):
         **Argument:**
         
         *\*fields*
-            One or more fields to project onto the EOFs. Must
-            be the same as the number of fields used to initialize the
-            `MultipleEofSolver`.
+            One or more fields (:py:mod:`cdms2` variables) to project
+            onto the EOFs. Must be the same as the number of fields used
+            to initialize the :py:class:`~eof2.MultipleEofSolver`
+            instance.
 
         **Optional arguments:**
 
@@ -506,20 +528,20 @@ class MultipleEof(object):
               eigenvalue.
 
         *weighted*
-            If *True* then the EOFs are weighted prior to
-            projection. If False the no weighting is applied. Defaults to
-            True (weighting is applied). Generally only the default setting
+            If *True* then the EOFs are weighted prior to projection. If
+            *False* then no weighting is applied. Defaults to *True*
+            (weighting is applied). Generally only the default setting
             should be used.
 
         **Examples:**
 
         Project fields onto all EOFs:
 
-        >>> pcs = eofobj.projectField(*fields)
+        >>> pcs = eofobj.projectField(field_c, field_d)
 
         Project fields onto the three leading EOFs:
 
-        >>> pcs = eofobj.projectField(*fields, , neofs=3)
+        >>> pcs = eofobj.projectField(field_c, field_c, neofs=3)
         
         """
         multimissing = list()

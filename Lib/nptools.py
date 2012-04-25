@@ -1,4 +1,7 @@
-"""supplementary tools related to EOF analysis (NumPy-only versions)"""
+"""
+Supplementary tools for the :py:mod:`numpy` EOF analysis interface.
+
+"""
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
@@ -65,17 +68,24 @@ def _check_flat_center(pcs, field):
 
 
 def correlation_map(pcs, field):
-    """
-    Maps of the correlation between a set of PCs and a spatial-temporal
-    field.
+    """Correlation maps for a set of PCs and a spatial-temporal field.
+
+    Given an array where the columns are PCs (e.g., as output from
+    :py:meth:`eof2.EofSolve.pcs`) and an array containing a
+    spatial-temporal where time is the first dimension, one correlation
+    map per PC is computed.
 
     The field must have the same temporal dimension as the PCs. Any
     number of spatial dimensions (including zero) are allowed in the
     field and there can be any number of PCs.
 
-    Arguments:
-    pcs -- Array of PCs with time as the first dimension.
-    field -- 1D or 2D field with time as the first dimension.
+    **Arguments:**
+
+    *pcs*
+        PCs as the columns of an array.
+
+    *field*
+        Spatial-temporal field with time as the first dimension.
 
     """
     # Check PCs and fields for validity, flatten the arrays ready for the
@@ -95,22 +105,31 @@ def correlation_map(pcs, field):
 
 
 def covariance_map(pcs, field, ddof=1):
-    """
-    Maps of the covariance between a set of PCs and a spatial-temporal
-    field.
+    """Covariance maps for a set of PCs and a spatial-temporal field.
+
+    Given an array where the columns are PCs (e.g., as output from
+    :py:meth:`eof2.EofSolve.pcs`) and an array containing a
+    spatial-temporal where time is the first dimension, one covariance
+    map per PC is computed.
 
     The field must have the same temporal dimension as the PCs. Any
     number of spatial dimensions (including zero) are allowed in the
     field and there can be any number of PCs.
 
-    Arguments:
-    pcs -- Array of PCs with time as the first dimension.
-    field -- 1D or 2D field with time as the first dimension.
+    **Arguments:**
 
-    Optional argument:
-    ddof -- 'Delta degrees of freedom'. The divisor used to normalize
-            the covariance is N - ddof where N is the number of samples.
-            Defaults to 1.
+    *pcs*
+        PCs as the columns of an array.
+
+    *field*
+        Spatial-temporal field with time as the first dimension.
+
+    **Optional arguments:**
+
+    *ddof*
+        'Delta degrees of freedom'. The divisor used to normalize
+        the covariance matrix is *N - ddof* where *N* is the
+        number of samples. Defaults to *1*.
 
     """
     # Check PCs and fields for validity, flatten the arrays ready for the

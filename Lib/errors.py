@@ -1,4 +1,4 @@
-"""Error classes for the eof2 package.""" 
+"""Exception classes for the :py:mod:~`eof2` package.""" 
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved. 
 # 
 # This file is part of eof2.

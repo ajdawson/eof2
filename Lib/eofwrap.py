@@ -1,4 +1,4 @@
-"""wrapper for using cdms2 variables with the EofSolver class"""
+"""Meta-data preserving EOF analysis for :py:mod:`cdms2` variables."""
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 # 
 # This file is part of eof2.
@@ -24,48 +24,69 @@ from errors import EofError, EofToolError
 
 
 class Eof(object):
-    """EOF analysis cdms wrapper.
-    
-    EOF analysis of cdms2 variables. Outputs have sensible meta-data.
-    
-    """
+    """EOF analysis (meta-data enabled :py:mod:`cdms2` interface).""" 
     
     def __init__(self, dataset, weights='none', center=True, ddof=1):
         """Create an Eof object.
         
-        Required argument:
-        dataset -- cdms2 transient variable containing the data to be
-            decomposed. Time must be the first dimension. Missing values
-            are allowed provided that they are constant with time (eg.
+        **Argument:**
+
+        *dataset*
+            A :py:mod:`cdms2` variable containing the data to be
+            analyzed. Time must be the first dimension. Missing values
+            are allowed provided that they are constant with time (e.g.,
             values of an oceanographic field over land).
         
-        Optional arguments:
-        weights -- Sets the weighting method. Defaults to no weighting.
-            The following weighting parameters are valid:
+        **Optional arguments:**
 
-            'area'    - Square-root of grid cell area normalized by
-                        total area. This is a standard weighting and
-                        should be used if you are unsure.
+        *weights*
+            Sets the weighting method. The following values are
+            accepted:
 
-            'coslat'  - Square-root of cosine of latitude ('cos_lat' is
-                        also accepted).
+            * *"area"* : Square-root of grid cell area normalized by
+              total area. Requires a latitude-longitude grid to be
+              present in the input :py:mod:`cdms2` variable *dataset*.
+              This is a fairly standard weighting strategy. If you are
+              unsure which method to use and you have gridded data then
+              this should be your first choice.
 
-            'none'    - Equal weights for all grid points (default).
+            * *"coslat"* : Square-root of cosine of latitude
+              (*"cos_lat"* is also accepted). Requires a latitude
+              dimension to be present in the input :py:mod:`cdms2`
+              variable *dataset*.
 
-             None     - Same as 'none'.
+            * *"none"* : Equal weights for all grid points (default).
 
-        center -- If True the mean along the first axis of the input
-            data set (the time-mean) will be removed prior to analysis.
-            If False the mean along the first axis will not be removed.
-            This option should only be set to False if you know what you
-            are doing and why. Defaults to True (mean is removed).
-        ddof -- 'Delta degrees of freedom'. The divisor used to
-            normalize the covariance matrix is N - ddof where N is the
-            number of samples. Defaults to 1.
+            * *None* : Same as *"none"*.
 
-        Example:
+             An array of weights may also be supplied instead of
+             specifying a weighting method.
+
+        *center*
+            If *True*, the mean along the first axis of the input data
+            set (the time-mean) will be removed prior to analysis. If
+            *False*, the mean along the first axis will not be removed.
+            Defaults to *True* (mean is removed). Generally this option
+            should be set to *True* as the covariance interpretation
+            relies on input data being anomalies with a time-mean of 0.
+            A valid reson for turning this off would be if you have
+            already generated an anomaly data set. Setting to *True* has
+            the useful side-effect of propagating missing values along
+            the time-dimension, ensuring the solver will work even if
+            missing values occur at different locations at different
+            times.
+
+        *ddof*
+            'Delta degrees of freedom'. The divisor used to normalize
+            the covariance matrix is *N - ddof* where *N* is the
+            number of samples. Defaults to *1*.
+
+        **Examples:**
+
+        EOF analysis with area-weighting for the input field:
+
         >>> from eof2 import Eof
-        >>> eofobj = Eof(data, weights="default")
+        >>> eofobj = Eof(field, weights="area")
 
         """
         # Check that dataset is recognised by cdms2 as a variable.
@@ -128,26 +149,34 @@ class Eof(object):
                           weights=wtarray, center=center, ddof=ddof)
         
     def pcs(self, pcscaling=0, npcs=None):
-        """Principal components.
+        """Principal component time series (PCs).
+
+        Returns the ordered PCs in a a :py:mod:`cdms2` variable.
         
-        Optional arguments:
-        pcscaling -- Sets the scaling of the principal components. The
-            following values are accepted:
-            0 - Un-scaled principal components.
-            1 - Principal components are divided by the square-root of
-                their eigenvalues. This results in PCs with unit
-                variance.
-            2 - Principal components are multiplied by the square-root
-                of their eigenvalues.
-            Defaults to 0 (un-scaled principal components).
-        npcs -- Number of principal components to return. Defaults to
-            all principal components.
+        **Optional arguments:**
 
-        Example 1:
-        >>> pcs = eofobj.pcs() # All PCs, un-scaled.
+        *pcscaling*
+            Set the scaling of the retrieved PCs. The following
+            values are accepted:
 
-        Example 2:
-        >>> pcs = eofobj.pcs(npcs=3, pcscaling=1) # First 3 PCs, scaled.
+            * *0* : Un-scaled principal components (default).
+            * *1* : Principal components are scaled to unit variance
+              (divided by the square-root of their eigenvalue).
+            * *2* : Principal components are multiplied by the
+              square-root of their eigenvalue.
+
+        *npcs* : Number of principal components to retrieve. Defaults to
+          all the principal components.
+
+        **Examples:**
+
+        All un-scaled PCs:
+
+        >>> pcs = eofobj.pcs()
+
+        First 3 PCs scaled to unit variance:
+
+        >>> pcs = eofobj.pcs(npcs=3, pcscaling=1) 
 
         """
         pcs = self.eofobj.pcs(pcscaling, npcs)
@@ -160,23 +189,31 @@ class Eof(object):
     
     def eofs(self, eofscaling=0, neofs=None):
         """Emipirical orthogonal functions.
-        
-        Optional arguments:
-        eofscaling -- Sets the scaling of the EOFs. The following values
-            are accepted:
-            0 - Un-scaled EOFs.
-            1 - EOFs are divided by the square-root of their eigenvalues
-            2 - EOFs are multiplied by the square-root of their
-                eigenvalues.
-            Defaults to 0 (un-scaled EOFs).
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
 
-        Example 1:
-        >>> # All EOFs, un-scaled.
+        Returns a the ordered EOFs in a :py:mod:`cdms2` variable.
+        
+        **Optional arguments:**
+
+        *eofscaling*
+            Sets the scaling of the EOFs. The following values are
+            accepted:
+
+            * *0* : Un-scaled EOFs (default).
+            * *1* : EOFs are divided by the square-root of their
+              eigenvalues.
+            * *2* : EOFs are multiplied by the square-root of their
+              eigenvalues.
+              
+        *neofs* -- Number of EOFs to return. Defaults to all EOFs.
+        
+        **Examples:**
+
+        All EOFs with no scaling:
+
         >>> eofs = eofobj.eofs()
 
-        Example 2:
-        >>> # First 3 EOFs, scaled.
+        First 3 EOFs with scaling applied:
+
         >>> eofs = eofobj.eofs(neofs=3, eofscaling=1)
 
         """
@@ -193,14 +230,22 @@ class Eof(object):
     def eigenvalues(self, neigs=None):
         """Eigenvalues (decreasing variances) associated with each EOF.
 
-        Optional argument:
-        neigs -- Number of eigenvalues to return. Defaults to all
-            eigenvalues.
+        Returns the ordered eigenvalues in a :py:mod:`cdms2` variable.
 
-        Example 1:
+        **Optional argument:**
+        
+        *neigs*
+            Number of eigenvalues to return. Defaults to all
+            eigenvalues.
+        
+        **Examples:**
+
+        All eigenvalues:
+
         >>> lambdas = eofobj.eigenvalues()
 
-        Example 2:
+        The first eigenvalue:
+
         >>> lambda1 = eofobj.eigenvalues(neigs=1)
         
         """
@@ -213,15 +258,31 @@ class Eof(object):
         return lambdas
         
     def eofsAsCorrelation(self, neofs=None):
-        """EOFs scaled as the correlation of the PCs with orginal field.
+        """
+        EOFs scaled as the correlation of the PCs with the original
+        field.
+        
+        Returns the ordered correlation EOFs in a :py:mod:`cdms2`
+        variable.
+        
+        **Optional argument:**
+        
+        *neofs*
+            Number of EOFs to return. Defaults to all EOFs.
+        
+        **Note:**
+        
+        These are only the EOFs expressed as correlation and are not
+        related to EOFs computed using the correlation matrix.
 
-        Optional argument:
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
+        **Examples:**
 
-        Example 1:
+        All EOFs:
+
         >>> eofs = eofobj.eofsAsCorrelation()
 
-        Example 2:
+        The leading EOF:
+
         >>> eof1 = eofobj.eofsAsCorrelation(neofs=1)
         
         """
@@ -236,28 +297,41 @@ class Eof(object):
         return eofs
     
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
-        """EOFs scaled as the covariance of the PCs with orginal field.
+        """
+        EOFs scaled as the covariance of the PCs with the original
+        field.
 
-        Optional argument:
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
-        pcscaling -- Sets the scaling of the principal components. The
+        Returns the ordered covariance EOFs in a :py:mod:`cdms2`
+        variable.
+        
+        **Optional arguments:**
+        
+        *neofs*
+            Number of EOFs to return. Defaults to all EOFs.
+        
+        *pcscaling*
+            Set the scaling of the PCs used to compute covariance. The
             following values are accepted:
-            0 - Un-scaled principal components.
-            1 - Principal components are divided by the square-root of
-                their eigenvalues. This results in PCs with unit
-                variance.
-            2 - Principal components are multiplied by the square-root
-                of their eigenvalues.
-            Defaults to 1 (standardised principal components).
 
-        Example 1:
+            * *0* : Un-scaled PCs.
+            * *1* : PCs are scaled to unit variance (divided by the
+              square-root of their eigenvalue) (default).
+            * *2* : PCs are multiplied by the square-root of their
+              eigenvalue.
+
+        **Examples:**
+        
+        All EOFs:
+
         >>> eofs = eofobj.eofsAsCovariance()
 
-        Example 2:
+        The leading EOF:
+
         >>> eof1 = eofobj.eofsAsCovariance(neofs=1)
 
-        Example 3:
-        >>> eof1 = eofobj.eofsAsCovariance(neofs=1, pcscaling=1)
+        The leading EOF using un-scaled PCs:
+
+        >>> eof1 = eofobj.eofsAsCovariance(neofs=1, pcscaling=0)
         
         """
         eofs = self.eofobj.eofsAsCovariance(neofs, pcscaling)
@@ -271,19 +345,25 @@ class Eof(object):
         return eofs
     
     def varianceFraction(self, neigs=None):
-        """Fraction of the total variance explained by each mode.
+        """Fractional EOF variances.
+        
+        The fraction of the total variance explained by each EOF, a
+        value between 0 and 1 inclusive, in a :py:mod:`cdms2` variable.
 
-        Optional argument:
-        neigs -- Number of eigenvalues to return the fractional variance
-            for. Defaults to all eigenvalues.
+        **Optional argument:**
 
-        Example 1:
-        Get the fractional variance represented by each eigenvalue.
+        *neigs*
+            Number of eigenvalues to return the fractional variance for.
+            Defaults to all eigenvalues.
+        
+        **Examples:**
+
+        The fractional variance represented by each eigenvalue:
+
         >>> varfrac = eofobj.varianceFraction()
 
-        Example 2:
-        Get the fractional variance represented by the first 3
-        eigenvalues.
+        The fractional variance represented by the first 3 eigenvalues:
+
         >>> varfrac = eofobj.VarianceFraction(neigs=3)
         
         """
@@ -300,28 +380,33 @@ class Eof(object):
         Total variance associated with the field of anomalies (the sum
         of the eigenvalues).
         
-        Returns a scalar (not a cdms2 transient variable).
+        Returns a scalar (not a :py:mod:`cdms2` transient variable).
 
-        Example:
-        Get the total variance (sum of the eigenvalues).
+        **Examples:**
+
         >>> var = eofobj.totalAnomalyVariance()
         
         """
         return self.eofobj.totalAnomalyVariance()
         
     def reconstructedField(self, neofs):
-        """Reconstructed anomaly field based on a subset of EOFs.
+        """Reconstructed data field based on a subset of EOFs.
 
-        If automatic weighting was performed by the Eof object then the
-        returned reconstructed field will be automatically un-weighted.
-        Otherwise the returned reconstructed field will  be weighted in
-        the same manner as the input to the Eof object.
+        If weights were passed to the :py:class:`~eof2.Eof` instance
+        then the returned reconstructed field will be automatically
+        un-weighted. Otherwise the returned reconstructed field will
+        be weighted in the same manner as the input to the
+        :py:class:`~eof2.Eof` instance.
+        
+        **Argument:**
+        
+        *neofs*
+            Number of EOFs to use for the reconstruction.
+        
+        **Examples:**
 
-        Argument:
-        neofs -- Number of EOFs to use for the reconstruction.
-
-        Example:
         Reconstruct the input field using 3 EOFs.
+
         >>> rfield = eofobj.reconstructedField(neofs=3)
         
         """
@@ -336,32 +421,43 @@ class Eof(object):
     def northTest(self, neigs=None, vfscaled=False):
         """Typical errors for eigenvalues.
         
-        Uses the method of North et al. (1982) to compute the typical
+        Returns the typical error for each eigenvalue in a
+        :py:mod:`cdms2` variable.
+
+        The method of North et al. (1982) is used to compute the typical
         error for each eigenvalue. It is assumed that the number of
         times in the input data set is the same as the number of
         independent realizations. If this assumption is not valid then
-        the results of this method may be inappropriate.
+        the result may be inappropriate.
         
-        Optional arguments:
-        neigs -- Number of eigenvalues to return typical errors for.
+        **Optional arguments:**
+        
+        *neigs*
+            The number of eigenvalues to return typical errors for.
             Defaults to typical errors for all eigenvalues.
-        vfscaled -- If True scale the errors by the sum of the
-            eigenvalues. This yields typical errors with the same scale
-            as the values returned by the 'varianceFraction' method. If
-            False then no scaling is done. Defaults to False (no
-            scaling.)
+            
+        *vfscaled*
+            If *True* scale the errors by the sum of the eigenvalues.
+            This yields typical errors with the same scale as the
+            values returned by the
+            :py:meth:`~eof2.Eof.varianceFraction` method. If *False*
+            then no scaling is done. Defaults to *False* (no scaling).
         
-        North, G. R., T. L. Bell, R. F. Cahalan, and F. J. Moeng, 1982,
-            Sampling errors in the estimation of empirical orthogonal
-            functions, Monthly Weather Review, 110, pages 669-706.
+        **References**
 
-        Example 1:
-        Get typical errors for all eigenvalues.
+        North, G. R., T. L. Bell, R. F. Cahalan, and F. J. Moeng, 1982:
+        "Sampling errors in the estimation of empirical orthogonal
+        functions", *Monthly Weather Review*, **110**, pages 669-706.
+        
+        **Examples:**
+        
+        Typical errors for all eigenvalues:
+
         >>> errs = eofobj.northTest()
 
-        Example 2:
-        Get typical errors for the first 3 eigenvalues and scale them
-        by the sum of the eigenvalues.
+        Typical errors for the first 3 eigenvalues scaled by the sum of
+        the eigenvalues:
+
         >>> errs = eofobj.northTest(neigs=3, vfscaled=True)
         
         """
@@ -374,10 +470,12 @@ class Eof(object):
         return typerrs
 
     def getWeights(self):
-        """Return the weights used for the analysis.
+        """Weights used for the analysis.
         
-        Example:
-        Get the 2D weights variable used for the analysis.
+        **Examples:**
+
+        The 2D weights variable used for the analysis:
+
         >>> wgt = eofobj.getWeights()
 
         """
@@ -391,31 +489,51 @@ class Eof(object):
 
     def projectField(self, field, neofs=None, eofscaling=0, weighted=True):
         """Project a field onto the EOFs.
-
-        Argument:
-        field -- A spatial or spatial-temporal field to project onto
-            EOFs.
-
-        Optional arguments:
-        neofs -- Number of EOFs to return. Defaults to all EOFs.
-        eofscaling -- Sets the scaling of the EOFs. The following values
-            are accepted:
-            0 - Un-scaled EOFs.
-            1 - EOFs are divided by the square-root of their eigenvalues
-            2 - EOFs are multiplied by the square-root of their
-                eigenvalues.
-            Defaults to 0 (un-scaled EOFs).
-        weighted -- If True then weights are applied to the EOFs prior
-            to the projection. If False then the EOFs are not weighted.
-            Defaults to True (weighting is applied), this is the setting
-            that should be used in most circumstances.       
         
-        Example 1:
-        Project a field onto all EOFs.
+        Returns projected time series in a :py:mod:`cdms2` variable.
+
+        Given a field, projects it onto the EOFs to generate a
+        corresponding set of time series in a :py:mod:`cdms2` variable.
+        The field can be projected onto all the EOFs or just a subset.
+        The field must have the same corresponding spatial dimensions
+        (including missing values in the same places) as the original
+        input to the :py:class:`~eof2.Eof` instance. The field may have
+        a different length time dimension to the original input field
+        (or no time dimension at all).
+        
+        **Argument:**
+        
+        *field*
+            A field (:py:mod:`cdms2` variable) to project onto the EOFs.
+
+        **Optional arguments:**
+
+        *neofs*
+            Number of EOFs to project onto. Defaults to all EOFs.
+
+        *eofscaling*
+            Set the scaling of the EOFs that are projected
+            onto. The following values are accepted:
+
+            * *0* : Un-scaled EOFs (default).
+            * *1* : EOFs are divided by the square-root of their eigenvalue.
+            * *2* : EOFs are multiplied by the square-root of their
+              eigenvalue.
+
+        *weighted*
+            If *True* then the EOFs are weighted prior to projection. If
+            *False* then no weighting is applied. Defaults to *True*
+            (weighting is applied). Generally only the default setting
+            should be used.
+
+        **Examples:**
+
+        Project a field onto all EOFs:
+
         >>> pcs = eofobj.projectField(field)
 
-        Example 2:
-        Project a field onto the three leading EOFs.
+        Project fields onto the three leading EOFs:
+
         >>> pcs = eofobj.projectField(field, neofs=3)
         
         """

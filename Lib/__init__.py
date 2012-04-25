@@ -1,4 +1,4 @@
-"""Fast and efficient EOF analysis for Python"""
+"""Fast and efficient EOF analysis for Python."""
 # (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved.
 #     
 # This file is part of eof2.
