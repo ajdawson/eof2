@@ -22,7 +22,7 @@ import warnings
 from errors import EofError
 
 
-# New axis constant (actually a reference to 'None' behind the scenes)
+# New axis constant (actually a reference to *None* behind the scenes)
 _NA = numpy.newaxis
 
 
@@ -86,7 +86,7 @@ class EofSolver(object):
         """
         # Store the input data in an instance variable.
         if dataset.ndim < 2:
-            raise EofError("The input data set must be at least two dimensional.")
+            raise EofError("the input data set must be at least two dimensional")
         self.dataset = dataset.copy()
         # Replace missing values with NaN as this makes more sense when
         # handling numpy arrays.
@@ -102,13 +102,13 @@ class EofSolver(object):
                 self.dataset = self.dataset * weights
                 self.weights = weights
             except ValueError:
-                raise EofError("Weight array dimensions are incompatible.")
+                raise EofError("weight array dimensions are incompatible")
             except TypeError:
-                raise EofError("Weights are not a valid type.")
+                raise EofError("weights are not a valid type")
         else:
             self.weights = None
         # Remove the time mean of the input data unless explicitly told
-        # not to by the 'center' argument.
+        # not to by the "center" argument.
         self.centered = center
         if center:
             self.dataset = self._center(self.dataset)
@@ -125,7 +125,7 @@ class EofSolver(object):
         # Compute the singular value decomposition of the design matrix.
         A, Lh, E = numpy.linalg.svd(dataNoMissing, full_matrices=False)
         if numpy.any(numpy.isnan(A)):
-            raise EofError("Missing values encountered in SVD.")
+            raise EofError("missing values encountered in SVD")
         # Singular values are the square-root of the eigenvalues of the
         # covariance matrix. Construct the eigenvalues appropriately and
         # normalize by N-ddof where N is the number of observations. This
@@ -190,7 +190,7 @@ class EofSolver(object):
             # Multiply by the square root of the eigenvalue.
             return self.P[:, slicer] * numpy.sqrt(self.L[slicer])
         else:
-            raise EofError("Invalid scaling option: %s." % repr(pcscaling))
+            raise EofError("invalid PC scaling option: %s" % repr(pcscaling))
 
     def eofs(self, eofscaling=0, neofs=None):
         """Empirical orthogonal functions (EOFs).
@@ -230,7 +230,7 @@ class EofSolver(object):
             rval = self.flatE[slicer] * numpy.sqrt(self.L[slicer])[:,_NA]
             return rval.reshape((neofs,) + self.originalshape)
         else:
-            raise EofError("Invalid eof scaling option: %s." % repr(eofscaling))
+            raise EofError("invalid eof scaling option: %s" % repr(eofscaling))
 
     def eigenvalues(self, neigs=None):
         """Eigenvalues (decreasing variances) associated with each EOF.
@@ -306,7 +306,7 @@ class EofSolver(object):
         """
         if pcscaling not in (1, 2, 3):
             # An invalid PC scaling option was given.
-            raise EofError("Invalid pc scaling option: %s." % repr(eofscaling))
+            raise EofError("invalid pc scaling option: %s" % repr(eofscaling))
         # Retrieve the EOFs expressed as correlation between PCs and the
         # original data.
         eofsc = self.eofsAsCorrelation(neofs=neofs)
@@ -541,7 +541,7 @@ class EofSolver(object):
         return projected_pcs
 
 
-# Create an alias 'EofNumPy' for backward compatibility.
+# Create an alias *EofNumPy* for backward compatibility.
 EofNumPy = EofSolver
 
 

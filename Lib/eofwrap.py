@@ -26,7 +26,7 @@ from errors import EofError, EofToolError
 class Eof(object):
     """EOF analysis (meta-data enabled :py:mod:`cdms2` interface).""" 
     
-    def __init__(self, dataset, weights='none', center=True, ddof=1):
+    def __init__(self, dataset, weights="none", center=True, ddof=1):
         """Create an Eof object.
         
         **Argument:**
@@ -91,18 +91,18 @@ class Eof(object):
         """
         # Check that dataset is recognised by cdms2 as a variable.
         if not cdms2.isVariable(dataset):
-            raise EofError("The input data must be a cdms2 variable.")
+            raise EofError("the input data must be a cdms2 variable")
         # Store the time axis as an instance variable.
         self.timeax = dataset.getTime()
         # Verify that a time axis was found, getTime returns None when a
         # time axis is not found.
         if self.timeax is None:
-            raise EofError("Time axis missing.")
+            raise EofError("time axis not found")
         # Check the dimension order of the input, time must be the first
         # dimension.
         order = dataset.getOrder()
         if order[0] != "t":
-            raise EofError("Time must be the first dimension.")
+            raise EofError("time must be the first dimension")
         # Verify the presence of at least one spatial dimension. The
         # instance variable channels will also be used as a partial axis
         # list when constructing meta-data. It contains the spatial
@@ -110,13 +110,13 @@ class Eof(object):
         self.channels = dataset.getAxisList()
         self.channels.remove(self.timeax)
         if len(self.channels) < 1:
-            raise EofError("One or more spatial dimensions are required.")
+            raise EofError("one or more spatial dimensions are required")
         # Store the missing value attribute of the data set in an
         # instance variable so that it is recoverable later.
         self.missingValue = dataset.getMissing()
         # Generate an appropriate set of weights for the input dataset. There
-        # are several weighting schemes. The 'area' weighting scheme requires
-        # a latitude-longitude grid to be present, the 'cos_lat' scheme only
+        # are several weighting schemes. The "area" weighting scheme requires
+        # a latitude-longitude grid to be present, the "cos_lat" scheme only
         # requires a latitude dimension.
         if weights in ("none", None):
             # No weights requested, set the weight array to None.

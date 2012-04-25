@@ -51,7 +51,7 @@ def _area_weights(grid, gridorder):
 
     """
     latw, lonw = grid.getWeights()
-    if gridorder == 'xy':
+    if gridorder == "xy":
         wtarray = numpy.outer(lonw, latw)
     else:
         wtarray = numpy.outer(latw, lonw)
@@ -60,7 +60,7 @@ def _area_weights(grid, gridorder):
     return wtarray
 
 
-def weights_array(dataset, scheme='area'):
+def weights_array(dataset, scheme="area"):
     """Weights for a data set on a grid.
     
     Returned weights are a :py:attr:`numpy.ndarray` broadcastable
@@ -94,38 +94,38 @@ def weights_array(dataset, scheme='area'):
     """
     # A re-usable generic error message for the function. When raising an
     # exception just fill in what is required.
-    errstr = "Weighting scheme '%s' requires %%s." % scheme
+    errstr = "weighting scheme '%s' requires %%s" % scheme
     # Always use lower-case for the scheme, allowing the user to use 
     # upper-case in their calling code without an error.
     scheme = scheme.lower()
-    if scheme in ('area'):
+    if scheme in ("area"):
         # Handle area weighting.
         grid = dataset.getGrid()
         if grid is None:
-            raise EofToolError(errstr % 'a grid')
+            raise EofToolError(errstr % "a grid")
         order = dataset.getOrder()
         if "xy" in order:
-            gridorder = 'xy'
+            gridorder = "xy"
             dimtoindex = dataset.getLatitude()
         elif "yx" in order:
-            gridorder = 'yx'
+            gridorder = "yx"
             dimtoindex = dataset.getLongitude()
         else:
             raise EofToolError(errstr % \
                     "adjacent latitude and longitude dimensions")
         # Retrieve area weights for the specified grid.
         weights = _area_weights(grid, gridorder)
-    elif scheme in ('coslat', 'cos_lat'):
+    elif scheme in ("coslat", "cos_lat"):
         # Handle square-root of cosine of latitude weighting.
         try:
             latdim = dataset.getLatitude()[:]
             dimtoindex = dataset.getLatitude()
         except (AttributeError, TypeError):
-            raise EofToolError(errstr % 'a latitude dimension')
+            raise EofToolError(errstr % "a latitude dimension")
         # Retrieve latitude weights.
         weights = _rootcoslat_weights(latdim)
     else:
-        raise EofToolError("Invalid weighting scheme: '%s'." % scheme)
+        raise EofToolError("invalid weighting scheme: '%s'" % scheme)
     # Re-shape the retrieved weights so that they are broadcastable to the
     # shape of the input arrays. This just involves adding any additional
     # singleton dimensions to the right of the last weights dimension.
@@ -184,9 +184,9 @@ def correlation_map(pcs, field):
         # There are no output dimensions, return a scalar.
         return cor
     # Otherwise return a cdms2 variable with the appropriate dimensions.
-    cor = cdms2.createVariable(cor, axes=outdims, id='pccor')
-    cor.long_name = 'PC correlation'
-    cor.units = ''
+    cor = cdms2.createVariable(cor, axes=outdims, id="pccor")
+    cor.long_name = "PC correlation"
+    cor.units = ""
     return cor
 
 
@@ -231,11 +231,11 @@ def covariance_map(pcs, field, ddof=1):
         # There are no output dimensions, return a scalar.
         return cov
     # Otherwise return a cdms2 variable with the appropriate dimensions.
-    cov = cdms2.createVariable(cov, axes=outdims, id='pccov')
-    cov.long_name = 'PC covariance'
+    cov = cdms2.createVariable(cov, axes=outdims, id="pccov")
+    cov.long_name = "PC covariance"
     return cov
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
 

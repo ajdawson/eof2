@@ -102,20 +102,20 @@ class MultipleEof(object):
 
         """
         # Handle keyword arguments manually.
-        keywords = {'weights': 'none', 'center': True, 'ddof':1}
+        keywords = {"weights": "none", "center": True, "ddof":1}
         for kwarg in kwargs:
             if kwarg not in keywords.keys():
-                raise EofError('Invalid argument: %s.' % kwarg)
-        weights = kwargs.get('weights', keywords['weights'])
-        center = kwargs.get('center', keywords['center'])
-        ddof = kwargs.get('ddof', keywords['ddof'])
+                raise EofError("invalid argument: %s." % kwarg)
+        weights = kwargs.get("weights", keywords["weights"])
+        center = kwargs.get("center", keywords["center"])
+        ddof = kwargs.get("ddof", keywords["ddof"])
         # Record the number of datasets.
         self._numdsets = len(datasets)
         # Ensure the weights are specified one per dataset.
-        if weights in ('none', None, 'area', 'cos_lat', 'coslat'):
+        if weights in ("none", None, "area", "cos_lat", "coslat"):
             weights = [weights] * self._numdsets
         elif len(weights) != self._numdsets:
-            raise EofError('Number of weights and data sets differ.')
+            raise EofError("number of weights and data sets differs")
         # Record dimension information, missing values and compute weights.
         self._multitimeaxes = list()
         self._multichannels = list()
@@ -123,26 +123,26 @@ class MultipleEof(object):
         passweights = list()
         for dataset, weight in zip(datasets, weights):
             if not cdms2.isVariable(dataset):
-                raise EofError('The input dataset must be a cdms2 variable.')
+                raise EofError("the input data set must be a cdms2 variable")
             # Ensure a time dimension exists.
             timeaxis = dataset.getTime()
             if timeaxis is None:
-                raise EofError('Time axis missing.')
+                raise EofError("time axis not found")
             self._multitimeaxes.append(timeaxis)
             # Ensure the time dimension is the first dimension.
             order = dataset.getOrder()
-            if order[0] != 't':
-                raise EofError('Time must be the first dimension.')
+            if order[0] != "t":
+                raise EofError("time must be the first dimension")
             # Record the other dimensions.
             channels = dataset.getAxisList()
             channels.remove(timeaxis)
             if len(channels) < 1:
-                raise EofError('One or more spatial dimensions are required.')
+                raise EofError("one or more spatial dimensions are required")
             self._multichannels.append(channels)
             # Record the missing values.
             self._multimissing.append(dataset.getMissing())
             # Compute weights as required.
-            if weight in ('none', None):
+            if weight in ("none", None):
                 passweights.append(None)
             else:
                 try:
@@ -233,15 +233,15 @@ class MultipleEof(object):
         """
         eofset = self.eofobj.eofs(eofscaling, neofs)
         neofs = eofset[0].shape[0]
-        eofax = cdms2.createAxis(range(neofs), id='eof')
+        eofax = cdms2.createAxis(range(neofs), id="eof")
         varset = list()
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
             eofset[iset][numpy.where(numpy.isnan(eofset[iset]))] = self._multimissing[iset]
-            eofset[iset] = cdms2.createVariable(eofset[iset], id='eofs', axes=axlist,
+            eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs", axes=axlist,
                     fill_value=self._multimissing[iset])
-            eofset[iset].name = 'empirical_orthogonal_functions'
-            eofset[iset].long_name = 'empirical orthogonal functions'
+            eofset[iset].name = "empirical_orthogonal_functions"
+            eofset[iset].long_name = "empirical orthogonal functions"
         return eofset
 
     def eigenvalues(self, neigs=None):
@@ -305,14 +305,14 @@ class MultipleEof(object):
         """
         eofset = self.eofobj.eofsAsCorrelation(neofs)
         neofs = eofset[0].shape[0]
-        eofax = cdms2.createAxis(range(neofs), id='eof')
+        eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
             eofset[iset][numpy.where(numpy.isnan(eofset[iset]))] = self._multimissing[iset]
-            eofset[iset] = cdms2.createVariable(eofset[iset], id='eofs_corr', axes=axlist,
+            eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs_corr", axes=axlist,
                     fill_value=self._multimissing[iset])
-            eofset[iset].name = 'empirical_orthogonal_functions'
-            eofset[iset].long_name = 'correlation between principal components and data'
+            eofset[iset].name = "empirical_orthogonal_functions"
+            eofset[iset].long_name = "correlation between principal components and data"
         return eofset
 
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
@@ -355,14 +355,14 @@ class MultipleEof(object):
         """
         eofset = self.eofobj.eofsAsCovariance(neofs)
         neofs = eofset[0].shape[0]
-        eofax = cdms2.createAxis(range(neofs), id='eof')
+        eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
             eofset[iset][numpy.where(numpy.isnan(eofset[iset]))] = self._multimissing[iset]
-            eofset[iset] = cdms2.createVariable(eofset[iset], id='eofs_cov', axes=axlist,
+            eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs_cov", axes=axlist,
                     fill_value=self._multimissing[iset])
-            eofset[iset].name = 'empirical_orthogonal_functions'
-            eofset[iset].long_name = 'covariance between principal components and data'
+            eofset[iset].name = "empirical_orthogonal_functions"
+            eofset[iset].long_name = "covariance between principal components and data"
         return eofset
 
     def varianceFraction(self, neigs=None):
@@ -435,9 +435,9 @@ class MultipleEof(object):
         for iset in xrange(self._numdsets):
             axlist = [self.timeax] + self._multichannels[iset]
             rfset[iset][numpy.where(numpy.isnan(rfset[iset]))] = self._multimissing[iset]
-            rfset[iset] = cdms2.createVariable(rfset[iset], id='rcon', axes=axlist,
+            rfset[iset] = cdms2.createVariable(rfset[iset], id="rcon", axes=axlist,
                     fill_value=self._multimissing[iset])
-            rfset[iset].long_name = 'reconstructed_field'
+            rfset[iset].long_name = "reconstructed_field"
         return rfset
 
     def northTest(self, neigs=None, vfscaled=False):
@@ -573,6 +573,6 @@ class MultipleEof(object):
         return pcs
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
 

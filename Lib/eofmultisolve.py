@@ -90,11 +90,11 @@ class MultipleEofSolver(object):
                 "ddof": 1}
         for kwarg in kwargs.keys():
             if kwarg not in keywords.keys():
-                raise EofEorror('invalid argument: %s' % kwarg)
-        missing = kwargs.get('missing', keywords['missing'])
-        weights = kwargs.get('weights', keywords['weights'])
-        center = kwargs.get('center', keywords['center'])
-        ddof = kwargs.get('ddof', keywords['ddof'])
+                raise EofEorror("invalid argument: %s" % kwarg)
+        missing = kwargs.get("missing", keywords["missing"])
+        weights = kwargs.get("weights", keywords["weights"])
+        center = kwargs.get("center", keywords["center"])
+        ddof = kwargs.get("ddof", keywords["ddof"])
         # Record the number of datasets provided.
         self._ndatasets = len(datasets)
         # Initialise instance variables dealing with dataset shapes.
@@ -117,7 +117,7 @@ class MultipleEofSolver(object):
             self._multidtypes.append(dataset.dtype)
         # Check that all fields have the same time dimension.
         if not (numpy.array(self._multirecords) == self._multirecords[0]).all():
-            raise EofError('All datasets must have the same first dimension.')
+            raise EofError("all datasets must have the same first dimension")
         # Get the dtype that will be used for the data and weights. This will
         # be the 'highest' dtype of those passed.
         dtype = sorted(self._multidtypes, reverse=True)[0]
@@ -129,7 +129,7 @@ class MultipleEofSolver(object):
             except TypeError:
                 missing = [missing] * self._ndatasets
             if len(missing) != self._ndatasets:
-                raise EofError('Number of missing values and datasets differ.')
+                raise EofError("number of missing values and datasets differs")
         # Form a full array to pass to the EOF solver consisting of all the
         # flat inputs.
         nt = self._multirecords[0]
@@ -153,7 +153,7 @@ class MultipleEofSolver(object):
         # Construct an array of weights the same shape as the data array.
         if weights is not None:
             if len(weights) != self._ndatasets:
-                raise EofError('Number of weights and datasets differ.')
+                raise EofError("number of weights and datasets differs")
             if not filter(lambda i: False if i is None else True, weights):
                 # If every entry in the weights list is None then just pass
                 # None to the EofSolver __init__ method.
@@ -176,7 +176,7 @@ class MultipleEofSolver(object):
                                     datasets[iset][0],
                                     weights[iset])[1].reshape([channels])
                         except ValueError:
-                            raise EofError("Weights are invalid.")
+                            raise EofError("weights are invalid")
         else:
             # Just pass None if none of the input datasets have associated
             # weights.
@@ -425,20 +425,20 @@ class MultipleEofSolver(object):
                 
         """
         if len(fields) != self._ndatasets:
-            raise EofError('Number of fields differ from original input.')
+            raise EofError("number of fields differ from original input")
         # Handle keyword arguments manually. This works around an issue in
         # Python where defined keyword arguments cannot follow a variable
         # length regular argument list.
-        keywords = {'missing': None, 'neofs': None, 'eofscaling': 0,
-                'weighted': True, 'notime': False}
+        keywords = {"missing": None, "neofs": None, "eofscaling": 0,
+                "weighted": True, "notime": False}
         for kwarg in kwargs.keys():
             if kwarg not in keywords.keys():
-                raise EofEorror('Invalid argument: %s.' % kwarg)
-        missing = kwargs.get('missing', keywords['missing'])
-        neofs = kwargs.get('neofs', keywords['neofs'])
-        eofscaling = kwargs.get('eofscaling', keywords['eofscaling'])
-        weighted = kwargs.get('weighted', keywords['weighted'])
-        notime = kwargs.get('notime', keywords['notime'])
+                raise EofEorror("invalid argument: %s" % kwarg)
+        missing = kwargs.get("missing", keywords["missing"])
+        neofs = kwargs.get("neofs", keywords["neofs"])
+        eofscaling = kwargs.get("eofscaling", keywords["eofscaling"])
+        weighted = kwargs.get("weighted", keywords["weighted"])
+        notime = kwargs.get("notime", keywords["notime"])
         # Record shape information about the input fields.
         multirecords = list()
         multichannels = list()
@@ -452,13 +452,13 @@ class MultipleEofSolver(object):
                 shape = field.shape[1:]
             channels = numpy.multiply.reduce(shape)
             if channels != self._multichannels[iset]:
-                raise EofError('Spatial dimensions do not match original fields.')
+                raise EofError("spatial dimensions do not match original fields")
             multirecords.append(records)
             multichannels.append(channels)
             multidtypes.append(field.dtype)
         # Check that all fields have the same time dimension.
         if not (numpy.array(multirecords) == multirecords[0]).all():
-            raise EofError('All datasets must have the same first dimension.')
+            raise EofError("all datasets must have the same first dimension")
         # Get the dtype that will be used for the data. This will be the
         # 'highest' dtype of those passed.
         dtype = sorted(multidtypes, reverse=True)[0]

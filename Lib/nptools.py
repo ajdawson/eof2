@@ -37,10 +37,10 @@ def _check_flat_center(pcs, field):
     if records != pcs.shape[0]:
         # Raise an error if the field has a different number of times to the
         # PCs provided.
-        raise EofToolError('PCs and field must have the same leading dimension.')
+        raise EofToolError("PCs and field must have the same first dimension")
     if len(pcs.shape) > 2:
         # Raise an error if the PCs are more than 2D.
-        raise EofToolError('PCs must be 1D or 2D.')
+        raise EofToolError("PCs must be 1D or 2D")
     # Check if the field is 1D.
     if len(field.shape) == 1:
         field_oned = True
@@ -142,6 +142,6 @@ def covariance_map(pcs, field, ddof=1):
     return cov
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
 
