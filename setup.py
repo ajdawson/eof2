@@ -1,7 +1,5 @@
-"""Build and install the eof2 package.
-
-"""
-# (c) Copyright 2010, 2011 Andrew Dawson. All Rights Reserved. 
+"""Build and install the eof2 package."""
+# (c) Copyright 2010-2012 Andrew Dawson. All Rights Reserved. 
 #
 # This file is part of eof2.
 # 
@@ -22,10 +20,11 @@ from distutils.core import setup
 
 setup(
     name="eof2",
-    version="1.3",
+    version="1.4",
     description="EOF analysis.",
     author="Andrew Dawson",
     author_email="dawson@atm.ox.ac.uk",
     packages=["eof2"],
     package_dir={"eof2":"Lib"}
 )
+
