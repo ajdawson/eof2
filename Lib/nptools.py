@@ -19,6 +19,7 @@ Supplementary tools for the :py:mod:`numpy` EOF analysis interface.
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
+import numpy.ma as ma
 
 from errors import EofToolError
 
@@ -93,13 +94,13 @@ def correlation_map(pcs, field):
     pcs_cent, field_cent, out_shape = _check_flat_center(pcs, field)
     # Compute the standard deviation of the PCs and the fields along the time
     # dimension (the leading dimension).
-    pcs_std = np.std(pcs_cent, axis=0)
-    field_std = np.std(field_cent, axis=0)
+    pcs_std = pcs_cent.std(axis=0)
+    field_std = field_cent.std(axis=0)
     # Set the divisor.
     div = np.float64(pcs_cent.shape[0])
     # Compute the correlation map.
-    cor = np.dot(field_cent.T, pcs_cent).T / div
-    cor /= np.outer(pcs_std, field_std)
+    cor = ma.dot(field_cent.T, pcs_cent).T / div
+    cor /= ma.outer(pcs_std, field_std)
     # Return the correlation with the appropriate shape.
     return cor.reshape(out_shape)
 
@@ -138,7 +139,7 @@ def covariance_map(pcs, field, ddof=1):
     # Set the divisor according to the specified delta-degrees of freedom.
     div = np.float64(pcs_cent.shape[0] - ddof)
     # Compute the covariance map, making sure it has the appropriate shape.
-    cov = (np.dot(field_cent.T, pcs_cent).T / div).reshape(out_shape)
+    cov = (ma.dot(field_cent.T, pcs_cent).T / div).reshape(out_shape)
     return cov
 
 

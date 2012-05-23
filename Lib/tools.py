@@ -19,7 +19,7 @@ Supplementary tools for the meta-data enabled EOF analysis interface.
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import cdms2
-import numpy
+import numpy as np
 
 from errors import EofToolError
 from nptools import covariance_map as _npcovmap
@@ -33,10 +33,10 @@ def _rootcoslat_weights(latdim):
        Latitude dimension values.
 
     """
-    coslat = numpy.cos(numpy.deg2rad(latdim))
-    coslat[numpy.where(coslat < 0)] = 0.
-    latw = numpy.sqrt(coslat)
-    latw[numpy.where(numpy.isnan(latw))] = 0.
+    coslat = np.cos(np.deg2rad(latdim))
+    coslat[np.where(coslat < 0)] = 0.
+    latw = np.sqrt(coslat)
+    latw[np.where(np.isnan(latw))] = 0.
     return latw
 
 
@@ -52,11 +52,11 @@ def _area_weights(grid, gridorder):
     """
     latw, lonw = grid.getWeights()
     if gridorder == "xy":
-        wtarray = numpy.outer(lonw, latw)
+        wtarray = np.outer(lonw, latw)
     else:
-        wtarray = numpy.outer(latw, lonw)
+        wtarray = np.outer(latw, lonw)
     wtarray /= wtarray.sum()
-    wtarray = numpy.sqrt(wtarray)
+    wtarray = np.sqrt(wtarray)
     return wtarray
 
 
