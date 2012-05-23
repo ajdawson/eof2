@@ -20,7 +20,8 @@ variables.
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import cdms2
-import numpy
+import numpy as np
+import numpy.ma as ma
 
 from eofmultisolve import MultipleEofSolver
 from tools import weights_array
@@ -158,9 +159,8 @@ class MultipleEof(object):
         # Define a time axis as the time axis of the first dataset.
         self.timeax = self._multitimeaxes[0]
         # Create a MultipleEofSolver to do the computations.
-        self.eofobj = MultipleEofSolver(*[d.data for d in datasets],
-                missing=self._multimissing, weights=passweights,
-                center=center, ddof=ddof)
+        self.eofobj = MultipleEofSolver(*[d.asma() for d in datasets],
+                weights=passweights, center=center, ddof=ddof)
             
     def pcs(self, pcscaling=0, npcs=None):
         """Principal component time series (PCs).
@@ -237,7 +237,9 @@ class MultipleEof(object):
         varset = list()
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
-            eofset[iset][numpy.where(numpy.isnan(eofset[iset]))] = self._multimissing[iset]
+            eofset[iset][np.where(np.isnan(eofset[iset]))] = self._multimissing[iset]
+            eofset[iset] = ma.array(eofset[iset], fill_value=self._multimissing[iset],
+                mask=np.where(eofset[iset]==self._multimissing[iset], True, False))
             eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs", axes=axlist,
                     fill_value=self._multimissing[iset])
             eofset[iset].name = "empirical_orthogonal_functions"
@@ -308,7 +310,9 @@ class MultipleEof(object):
         eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
-            eofset[iset][numpy.where(numpy.isnan(eofset[iset]))] = self._multimissing[iset]
+            eofset[iset][np.where(np.isnan(eofset[iset]))] = self._multimissing[iset]
+            eofset[iset] = ma.array(eofset[iset], fill_value=self._multimissing[iset],
+                mask=np.where(eofset[iset]==self._multimissing[iset], True, False))
             eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs_corr", axes=axlist,
                     fill_value=self._multimissing[iset])
             eofset[iset].name = "empirical_orthogonal_functions"
@@ -358,7 +362,9 @@ class MultipleEof(object):
         eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
-            eofset[iset][numpy.where(numpy.isnan(eofset[iset]))] = self._multimissing[iset]
+            eofset[iset][np.where(np.isnan(eofset[iset]))] = self._multimissing[iset]
+            eofset[iset] = ma.array(eofset[iset], fill_value=self._multimissing[iset],
+                mask=np.where(eofset[iset]==self._multimissing[iset], True, False))
             eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs_cov", axes=axlist,
                     fill_value=self._multimissing[iset])
             eofset[iset].name = "empirical_orthogonal_functions"
@@ -434,7 +440,9 @@ class MultipleEof(object):
         rfset = self.eofobj.reconstructedField(neofs)
         for iset in xrange(self._numdsets):
             axlist = [self.timeax] + self._multichannels[iset]
-            rfset[iset][numpy.where(numpy.isnan(rfset[iset]))] = self._multimissing[iset]
+            rfset[iset][np.where(np.isnan(rfset[iset]))] = self._multimissing[iset]
+            rfset[iset] = ma.array(rfset[iset], fill_value=self._multimissing[iset],
+                mask=np.where(rfset[iset]==self._multimissing[iset], True, False))
             rfset[iset] = cdms2.createVariable(rfset[iset], id="rcon", axes=axlist,
                     fill_value=self._multimissing[iset])
             rfset[iset].long_name = "reconstructed_field"
@@ -544,18 +552,16 @@ class MultipleEof(object):
         >>> pcs = eofobj.projectField(field_c, field_c, neofs=3)
         
         """
-        multimissing = list()
         multitimeaxes = list()
         for field in fields:
-            multimissing.append(field.getMissing())
             multitimeaxes.append(field.getTime())
         if None in multitimeaxes:
             notime = True
         else:
             notime = False
-        pcs = self.eofobj.projectField([f.data for f in fields],
-                missing=multimissing, neofs=neofs, eofscaling=eofscaling,
-                weighted=weighted, notime=notime)
+        pcs = self.eofobj.projectField([f.asma() for f in fields],
+                neofs=neofs, eofscaling=eofscaling, weighted=weighted,
+                notime=notime)
         # Create an axis list, its contents depend on whether or not a time
         # axis was present in the input field.
         if notime:

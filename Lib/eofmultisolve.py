@@ -15,7 +15,8 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
-import numpy
+import numpy as np
+import numpy.ma as ma
 
 from eofsolve import EofSolver
 from errors import EofError
@@ -33,23 +34,16 @@ class MultipleEofSolver(object):
         **Arguments:**
 
         *\*datasets*
-            One or more arrays of two or more dimensions containing the
-            data to be decomposed. Time must be the first dimension of
-            each array and must be the same for all arrays. Missing
-            values are allowed provided that they are constant with time
-            (e.g., values of an oceanographic variable over land).
+            One or more :py:class:`numpy.ndarray`s or
+            :py:class:`numpy.ma.core.MasekdArray`s with two or more
+            dimensions containing the data to be analysed. The first
+            dimension of each array is assumed to represent time.
+            Missing values are permitted, either in the form of masked
+            arrays, or the value :py:attr:`numpy.nan`. Missing values
+            must be constant with time (e.g., values of an oceanographic
+            field over land).
 
         **Optional arguments:**
-
-        *missing*
-            The missing values of the data sets. This may be specified
-            as a single value applied to all input arrays or a sequence
-            of values, one for each array in *\*datasets*. If the value
-            is specified as *None* then no particular value is assumed
-            to be missing for the corresponding array in *\*datasets*.
-            If an input array in *\*datasets* uses :py:attr:`numpy.nan`
-            as its missing value then they will automatically be handled
-            correctly by the solver and this option is not required.
 
         *weights*
             A sequence of arrays of weights whose shapes are compatible
@@ -86,12 +80,10 @@ class MultipleEofSolver(object):
         # is required since Python 2.7 cannot accept a variable argument list
         # followed by a set of keyword arguments. For some reason both must be
         # variable.
-        keywords = {"missing": None, "weights": None, "center": True,
-                "ddof": 1}
+        keywords = {"weights": None, "center": True, "ddof": 1}
         for kwarg in kwargs.keys():
             if kwarg not in keywords.keys():
-                raise EofEorror("invalid argument: %s" % kwarg)
-        missing = kwargs.get("missing", keywords["missing"])
+                raise EofError("invalid argument: %s" % kwarg)
         weights = kwargs.get("weights", keywords["weights"])
         center = kwargs.get("center", keywords["center"])
         ddof = kwargs.get("ddof", keywords["ddof"])
@@ -107,7 +99,7 @@ class MultipleEofSolver(object):
         for dataset in datasets:
             records = dataset.shape[0]
             shape = dataset.shape[1:]
-            channels = numpy.multiply.reduce(shape)
+            channels = np.multiply.reduce(shape)
             slicer = slice(slicebegin, slicebegin+channels)
             slicebegin += channels
             self._multirecords.append(records)
@@ -116,40 +108,20 @@ class MultipleEofSolver(object):
             self._multichannels.append(channels)
             self._multidtypes.append(dataset.dtype)
         # Check that all fields have the same time dimension.
-        if not (numpy.array(self._multirecords) == self._multirecords[0]).all():
+        if not (np.array(self._multirecords) == self._multirecords[0]).all():
             raise EofError("all datasets must have the same first dimension")
         # Get the dtype that will be used for the data and weights. This will
         # be the 'highest' dtype of those passed.
         dtype = sorted(self._multidtypes, reverse=True)[0]
-        # If missing value is given but is not a list, expand it to a list the
-        # same length as the number of fields.
-        if missing is not None:
-            try:
-                iter(missing)
-            except TypeError:
-                missing = [missing] * self._ndatasets
-            if len(missing) != self._ndatasets:
-                raise EofError("number of missing values and datasets differs")
         # Form a full array to pass to the EOF solver consisting of all the
         # flat inputs.
         nt = self._multirecords[0]
-        ns = numpy.add.reduce(self._multichannels)
-        dataset = numpy.empty([nt, ns], dtype=dtype)
+        ns = np.add.reduce(self._multichannels)
+        dataset = ma.empty([nt, ns], dtype=dtype)
         for iset in xrange(self._ndatasets):
             slicer = self._multislicers[iset]
             channels = self._multichannels[iset]
             dataset[:, slicer] = datasets[iset].reshape([nt, channels])
-            if missing is not None:
-                mv = missing[iset]
-                if mv is not None:
-                    # Replace missing values with numpy.nan. This is the best
-                    # option. np.nan will be handled implicitly by EofSolver.
-                    dataset[:, slicer][numpy.where(dataset[:, slicer] == mv)] \
-                            = numpy.nan
-        # All missing values in our dataset are converted to numpy.nan so they
-        # do not need to be handled by EofSolver. We can just pass None which
-        # tells EofSolver not to handle a particular value as missing.
-        missing = None
         # Construct an array of weights the same shape as the data array.
         if weights is not None:
             if len(weights) != self._ndatasets:
@@ -160,7 +132,7 @@ class MultipleEofSolver(object):
                 warr = None
             else:
                 # Construct a spatial weights array.
-                warr = numpy.empty([1, ns], dtype=dtype)
+                warr = np.empty([1, ns], dtype=dtype)
                 for iset in xrange(self._ndatasets):
                     slicer = self._multislicers[iset]
                     if weights[iset] is None:
@@ -172,7 +144,7 @@ class MultipleEofSolver(object):
                         # conformed to the correct dimensions.
                         channels = self._multichannels[iset]
                         try:
-                            warr[:, slicer] = numpy.broadcast_arrays(
+                            warr[:, slicer] = np.broadcast_arrays(
                                     datasets[iset][0],
                                     weights[iset])[1].reshape([channels])
                         except ValueError:
@@ -182,8 +154,7 @@ class MultipleEofSolver(object):
             # weights.
             warr = None
         # Create an EofSolver object to handle the computations.
-        self.eofobj = EofSolver(dataset, missing=missing, weights=warr,
-                center=center, ddof=1)
+        self.eofobj = EofSolver(dataset, weights=warr, center=center, ddof=1)
 
     def _unwrap(self, modes):
         """Split a returned mode field into component parts."""
@@ -429,12 +400,11 @@ class MultipleEofSolver(object):
         # Handle keyword arguments manually. This works around an issue in
         # Python where defined keyword arguments cannot follow a variable
         # length regular argument list.
-        keywords = {"missing": None, "neofs": None, "eofscaling": 0,
-                "weighted": True, "notime": False}
+        keywords = {"neofs": None, "eofscaling": 0, "weighted": True,
+                "notime": False}
         for kwarg in kwargs.keys():
             if kwarg not in keywords.keys():
                 raise EofEorror("invalid argument: %s" % kwarg)
-        missing = kwargs.get("missing", keywords["missing"])
         neofs = kwargs.get("neofs", keywords["neofs"])
         eofscaling = kwargs.get("eofscaling", keywords["eofscaling"])
         weighted = kwargs.get("weighted", keywords["weighted"])
@@ -450,49 +420,31 @@ class MultipleEofSolver(object):
             else:
                 records = field.shape[0]
                 shape = field.shape[1:]
-            channels = numpy.multiply.reduce(shape)
+            channels = np.multiply.reduce(shape)
             if channels != self._multichannels[iset]:
                 raise EofError("spatial dimensions do not match original fields")
             multirecords.append(records)
             multichannels.append(channels)
             multidtypes.append(field.dtype)
         # Check that all fields have the same time dimension.
-        if not (numpy.array(multirecords) == multirecords[0]).all():
+        if not (np.array(multirecords) == multirecords[0]).all():
             raise EofError("all datasets must have the same first dimension")
         # Get the dtype that will be used for the data. This will be the
         # 'highest' dtype of those passed.
         dtype = sorted(multidtypes, reverse=True)[0]
-        # If missing value is given but is not a list, expand it to a list the
-        # same length as the number of fields.
-        if missing is not None:
-            try:
-                iter(missing)
-            except TypeError:
-                missing = [missing] * self._ndatasets
         # Form a full array to pass to the EOF solver consisting of all the
         # combined flat inputs.
         nt = multirecords[0]
-        ns = numpy.add.reduce(self._multichannels)
+        ns = np.add.reduce(self._multichannels)
         outdims = filter(None, [nt, ns])
-        cfields = numpy.empty(outdims, dtype=dtype)
+        cfields = ma.empty(outdims, dtype=dtype)
         for iset in xrange(self._ndatasets):
             slicer = self._multislicers[iset]
             channels = self._multichannels[iset]
             dims = filter(None, [nt, channels])
             cfields[..., slicer] = fields[iset].reshape(dims)
-            if missing is not None:
-                mv = missing[iset]
-                if mv is not None:
-                    # Replace missing values with numpy.nan. This is the best
-                    # option. np.nan will be handled implicitly by EofSolver.
-                    cfields[..., slicer][numpy.where(cfields[..., slicer] == mv)] \
-                            = numpy.nan
-        # All missing values in our dataset are converted to numpy.nan so they
-        # do not need to be handled by EofSolver. We can just pass None which
-        # tells EofSolver not to handle a particular value as missing.
-        missing = None
         # Compute the projection using the EofSolver object.
-        pcs = self.eofobj.projectField(cfields, missing=missing, neofs=neofs,
+        pcs = self.eofobj.projectField(cfields, neofs=neofs,
                 eofscaling=eofscaling, weighted=weighted, notime=notime)
         return pcs
 

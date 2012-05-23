@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import cdms2
-import numpy
+import numpy as np
+import numpy.ma as ma
 
 from eofsolve import EofSolver
 from tools import weights_array
@@ -145,8 +146,8 @@ class Eof(object):
         # Create an EofSolver object using appropriate arguments for this
         # data set. The object will be used for the decomposition and
         # for returning the results.
-        self.eofobj = EofSolver(dataset.data, missing=self.missingValue,
-                          weights=wtarray, center=center, ddof=ddof)
+        self.eofobj = EofSolver(dataset.asma(), weights=wtarray,
+                center=center, ddof=ddof)
         
     def pcs(self, pcscaling=0, npcs=None):
         """Principal component time series (PCs).
@@ -218,7 +219,9 @@ class Eof(object):
 
         """
         eofs = self.eofobj.eofs(eofscaling, neofs)
-        eofs[numpy.where(numpy.isnan(eofs))] = self.missingValue
+        eofs[np.where(np.isnan(eofs))] = self.missingValue
+        eofs = ma.array(eofs, fill_value=self.missingValue,
+                mask=np.where(eofs==self.missingValue, True, False))
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
         axlist = [eofax] + self.channels
         eofs = cdms2.createVariable(eofs, id="eofs", axes=axlist,
@@ -287,7 +290,9 @@ class Eof(object):
         
         """
         eofs = self.eofobj.eofsAsCorrelation(neofs)
-        eofs[numpy.where(numpy.isnan(eofs))] = self.missingValue
+        eofs[np.where(np.isnan(eofs))] = self.missingValue
+        eofs = ma.array(eofs, fill_value=self.missingValue,
+                mask=np.where(eofs==self.missingValue, True, False))
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
         axlist = [eofax] + self.channels
         eofs = cdms2.createVariable(eofs, id="eofs_corr", axes=axlist,
@@ -335,7 +340,9 @@ class Eof(object):
         
         """
         eofs = self.eofobj.eofsAsCovariance(neofs, pcscaling)
-        eofs[numpy.where(numpy.isnan(eofs))] = self.missingValue
+        eofs[np.where(np.isnan(eofs))] = self.missingValue
+        eofs = ma.array(eofs, fill_value=self.missingValue,
+                mask=np.where(eofs==self.missingValue, True, False))
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
         axlist = [eofax] + self.channels
         eofs = cdms2.createVariable(eofs, id="eofs_cov", axes=axlist,
@@ -411,7 +418,9 @@ class Eof(object):
         
         """
         rfield = self.eofobj.reconstructedField(neofs)
-        rfield[numpy.where(numpy.isnan(rfield))] = self.missingValue
+        rfield[np.where(np.isnan(rfield))] = self.missingValue
+        rfield = ma.array(rfield, fill_value=self.missingValue,
+                mask=np.where(rfield==self.missingValue, True, False))
         axlist = [self.timeax] + self.channels
         rfield = cdms2.createVariable(rfield, id="rcon", axes=axlist,
                 fill_value=self.missingValue)
@@ -544,9 +553,8 @@ class Eof(object):
         else:
             notime = False
         # Compute the projected PCs.
-        pcs = self.eofobj.projectField(field, missing=field.getMissing(),
-                neofs=neofs, eofscaling=eofscaling, weighted=weighted,
-                notime=notime)
+        pcs = self.eofobj.projectField(field.asma(), neofs=neofs,
+                eofscaling=eofscaling, weighted=weighted, notime=notime)
         # Create an axis list, its contents depend on whether or not a time
         # axis was present in the input field.
         if notime:
