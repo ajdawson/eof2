@@ -91,7 +91,7 @@ class EofSolver(object):
         # Store information about the shape/size of the input data.
         self.records = self.dataset.shape[0]
         self.originalshape = self.dataset.shape[1:]
-        self.channels = np.multiply.reduce(self.originalshape)
+        self.channels = np.product(self.originalshape)
         # Weight the data set according to weighting argument.
         if weights is not None:
             try:
@@ -150,7 +150,6 @@ class EofSolver(object):
         """Remove the mean of an array along the first dimension."""
         # Compute the mean along the first dimension.
         mean = in_array.mean(axis=0)
-#        mean = numpy.add.reduce(in_array) / float(len(in_array))
         # Return the input array with its mean along the first dimension
         # removed.
         return (in_array - mean)
@@ -359,7 +358,7 @@ class EofSolver(object):
         # Return the array of eigenvalues divided by the sum of the
         # eigenvalues.
         slicer = slice(0, neigs)
-        return self.L[slicer] / np.add.reduce(self.L)
+        return self.L[slicer] / self.L.sum()
 
     def totalAnomalyVariance(self):
         """
@@ -368,7 +367,7 @@ class EofSolver(object):
         
         """
         # Return the sum of the eigenvalues.
-        return np.add.reduce(self.L)
+        return self.L.sum()
 
     def reconstructedField(self, neofs):
         """Reconstructed data field based on a subset of EOFs.
@@ -435,7 +434,7 @@ class EofSolver(object):
         # If requested, allow for scaling of the eigenvalues by the total
         # variance (sum of the eigenvalues).
         if vfscaled:
-            factor /= np.add.reduce(self.L)
+            factor /= self.L.sum()
         # Return the typical errors.
         return self.L[slicer] * factor
 
@@ -507,12 +506,12 @@ class EofSolver(object):
         # Flatten the input field into [time, space] dimensionality unless it
         # is indicated that there is no time dimension present.
         if notime:
-            channels = np.multiply.reduce(field.shape)
+            channels = np.product(field.shape)
             field_flat = field.reshape([channels])
             nonMissingIndex = np.where(np.isnan(field_flat) == False)[0]
         else:
             records = field.shape[0]
-            channels = np.multiply.reduce(field.shape[1:])
+            channels = np.product(field.shape[1:])
             field_flat = field.reshape([records, channels])
             nonMissingIndex = np.where(np.isnan(field_flat[0]) == False)[0]
         # Isolate the non-missing points.

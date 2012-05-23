@@ -99,7 +99,7 @@ class MultipleEofSolver(object):
         for dataset in datasets:
             records = dataset.shape[0]
             shape = dataset.shape[1:]
-            channels = np.multiply.reduce(shape)
+            channels = np.product(shape)
             slicer = slice(slicebegin, slicebegin+channels)
             slicebegin += channels
             self._multirecords.append(records)
@@ -116,7 +116,7 @@ class MultipleEofSolver(object):
         # Form a full array to pass to the EOF solver consisting of all the
         # flat inputs.
         nt = self._multirecords[0]
-        ns = np.add.reduce(self._multichannels)
+        ns = self._multichannels.sum()
         dataset = ma.empty([nt, ns], dtype=dtype)
         for iset in xrange(self._ndatasets):
             slicer = self._multislicers[iset]
@@ -420,7 +420,7 @@ class MultipleEofSolver(object):
             else:
                 records = field.shape[0]
                 shape = field.shape[1:]
-            channels = np.multiply.reduce(shape)
+            channels = np.product(shape)
             if channels != self._multichannels[iset]:
                 raise EofError("spatial dimensions do not match original fields")
             multirecords.append(records)
@@ -435,7 +435,7 @@ class MultipleEofSolver(object):
         # Form a full array to pass to the EOF solver consisting of all the
         # combined flat inputs.
         nt = multirecords[0]
-        ns = np.add.reduce(self._multichannels)
+        ns = self._multichannels.sum()
         outdims = filter(None, [nt, ns])
         cfields = ma.empty(outdims, dtype=dtype)
         for iset in xrange(self._ndatasets):
