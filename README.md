@@ -39,6 +39,7 @@ Documentation
 The package docstrings are very complete and are currently the primary source of
 documentation.
 
+A few short practical [examples](https://github.com/ajdawson/eof2/wiki) are also available.
 
 Frequently asked questions
 --------------------------
