@@ -20,6 +20,7 @@ import numpy as np
 import warnings
 
 from errors import EofError
+from nptools import correlation_map, covariance_map
 
 
 # New axis constant (actually a reference to *None* behind the scenes)
@@ -255,28 +256,15 @@ class EofSolver(object):
             Number of EOFs to return. Defaults to all EOFs.
         
         """
-        # Correlation of the original dataset with the PCs is identical to:
-        #   e_m l_m^(1/2) / s
-        # where e_m is the m'th eigenvector (EOF), l is the m'th eigenvalue,
-        # and s is the vector of standard deviations of the original
-        # data set (see Wilks 2006).
-        #
-        # Retrieve the EOFs multiplied by the square-root of their eigenvalue.
-        e = self.eofs(eofscaling=2, neofs=neofs)
-        # Compute the standard deviation map of the input dataset.
-        s = np.std(self.dataset.reshape(
-                (self.records,) + self.originalshape), axis=0, ddof=self.ddof)
-        # Compute the correlation maps, warnings are turned off to handle the
-        # case where standard deviation is zero. This can happen easily if
-        # cosine latitude weights are applied to a field with grid points at
-        # 90N, which will be weighted by zero and hence not vary with time, or
-        # more generally if the input dataset is constant in time at one or
-        # more locations.
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            c = e / s
-        # Return the correlation maps.
-        return c
+        # Retrieve the specified number of PCs.
+        pcs = self.pcs(npcs=neofs, pcscaling=1)
+        # Compute the correlation of the PCs with the input field.
+        c = correlation_map(pcs,
+                self.dataset.reshape((self.records,)+self.originalshape))
+        # The results of the correlation_map function will be a masked array.
+        # For consistency with other return values, this is converted to a
+        # numpy array filled with numpy.nan.
+        return c.filled(fill_value=np.nan)
 
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
         """
@@ -299,48 +287,13 @@ class EofSolver(object):
               eigenvalue.
 
         """
-        if pcscaling not in (1, 2, 3):
-            # An invalid PC scaling option was given.
-            raise EofError("invalid pc scaling option: %s" % repr(eofscaling))
-        # Retrieve the EOFs expressed as correlation between PCs and the
-        # original data.
-        eofsc = self.eofsAsCorrelation(neofs=neofs)
-        # Compute the standard deviation of the PCs. Retrieve the appropriate
-        # number of eigenvalues. If the PCs are scaled by (multiplication of)
-        # the square-root of their eigenvalue then their standard deviations
-        # are given by the eigenvalues.
-        pcstd = self.L[slice(0, neofs)]
-        if pcscaling == 0:
-            # If PCs are unscaled then their standard deviation is the
-            # square-root of their eigenvalue.
-            pcstd = np.sqrt(pcstd)
-        elif pcscaling == 1:
-            # If the PCs are scaled by (division of) the square-root of their
-            # eigenvalue then their variance and standard deviation is 1.
-            pcstd = np.ones_like(pcstd)
-        # We shape the array of standard deviations so it can be broadcast
-        # against the EOFs expressed as correlation of the PCs with the input
-        # data.
-        pcstd = pcstd.reshape([len(pcstd)] + [1] * len(self.originalshape))
-        # Compute the standard deviation of the input data set time series.
-        # This is reshaped into the spatial dimensions of the input data.
-        if self.weights is not None:
-            # If the input data was weighted then we should remove the
-            # weighting before computing the standard deviation.
-            datastd = np.std(
-                    self.dataset.reshape(
-                        (self.records,)+self.originalshape) / \
-                    self.weights, axis=0, ddof=self.ddof)
-        else:
-            # If no weighting was used then the dataset does not need to be
-            # adjusted.
-            datastd = np.std(self.dataset, axis=0, ddof=self.ddof).reshape(
-                    self.originalshape)
-        # Multiply by the standard deviation of the PCs and data time series
-        # at each point. This converts the correlation into covariance.
-        eofsv = eofsc * datastd * pcstd
-        # Return the EOFs expressed as covariance of PCs and the input data.
-        return eofsv
+        pcs = self.pcs(npcs=neofs, pcscaling=pcscaling)
+        c = covariance_map(pcs,
+                self.dataset.reshape((self.records,)+self.originalshape))
+        # The results of the covariance_map function will be a masked array.
+        # For consitsency with other return values, this is converted to a
+        # numpy array filled with numpy.nan.
+        return c.filled(fill_value=np.nan)
         
     def varianceFraction(self, neigs=None):
         """Fractional EOF variances.
