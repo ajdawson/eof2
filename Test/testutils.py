@@ -22,7 +22,7 @@ def scalar_field(container_type='numpy'):
     M1 = np.cos(t)
     M2 = np.sin(t)
     M = np.array([M1, M2]).T
-    # Create the scalr field as the product of the spatial patterns and the
+    # Create the scalar field as the product of the spatial patterns and the
     # time series, thus providing a dataset that can be decomposed with a
     # known result.
     D = np.dot(M, Z)
@@ -68,39 +68,57 @@ def error(A1, A2):
     return (np.sqrt((A1 - A2)**2).mean()) / (np.max(A2) - np.min(A2))
 
 
-def sign_matrix(s1, s2, itype='eof'):
+def sign_matrix(s1, s2, transpose=False):
     """
     Create a matrix of sign weights used for adjusting the signs of a
     set of EOFs or PCs to agree with a given set of EOFs or PCs.
     
     This is required since the sign of EOFs and PCs is arbitrary.
     
-    Arguments:
-    s1, s2 -- Sets of EOFs or PCs.
+    **Arguments:**
 
-    Optional argument:
-    itype -- The type of the input. Use 'eof' for EOFs and 'pc' for PCs.
-            Defaults to 'eof'.
+    *s1*, *s2*
+    Sets of EOFs or PCs.
 
+    **Optional argument:**
+
+    *transpose*
+    If *True*, transpose the input arrays before computation of the
+    sign. If *False* don't use the transpose. Defaults to *False*.
+    
     """
     try:
-        # Convert cdms2 variables to numpy masked arrays.
+        # cdms2 variables can be cast to masked arrays.
         s1 = s1.asma()
         s2 = s2.asma()
     except:
         pass
-    if itype == 'eof':
-        # EOFs are dimensioned (eof, space)
-        sign = np.where(np.sign(s2[:, 0]) == np.sign(s1[:, 0]),
-                1., -1.)[:, np.newaxis]
-    elif itype == 'pc':
-        # PCs are dimensioned (time, eof)
-        sign = np.where(np.sign(s2[0]) == np.sign(s1[0]),
-                1., -1.)[np.newaxis]
-    return sign
+    if transpose:
+        s1 = s1.T
+        s2 = s2.T
+    nmodes = s1.shape[0]
+    signs = np.empty([nmodes], dtype=np.float64)
+    for mode in xrange(nmodes):
+        # For each mode, find a point that is non-zero in both inputs. The
+        # sign of this value can then be compared to determine the relative
+        # signs.
+        i = 0
+        try:
+            while _close(s1[mode, i], 0) or _close(s2[mode, i], 0):
+                i += 1
+        except IndexError:
+            raise ValueError("cannot determine sign due to zeros")
+        if np.sign(s1[mode, i]) == np.sign(s2[mode, i]):
+            signs[mode] = 1
+        else:
+            signs[mode] = -1
+    return signs
+
+
+def _close(a, b, rtol=1e-05, atol=1e-08):
+    return abs(a - b) <= (atol + rtol * abs(b))
 
 
 def identify(title):
     print '[%s] ' % title,
-
 
