@@ -17,6 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import numpy as np
+import numpy.ma as ma
 import warnings
 
 from errors import EofError
@@ -87,8 +88,9 @@ class EofSolver(object):
         # Check if the input is a masked array. If so fill it with NaN.
         try:
             self.dataset = self.dataset.filled(fill_value=np.nan)
+            self._filled = True
         except AttributeError:
-            pass
+            self._filled = False
         # Store information about the shape/size of the input data.
         self.records = self.dataset.shape[0]
         self.originalshape = self.dataset.shape[1:]
@@ -216,17 +218,17 @@ class EofSolver(object):
             # modified. If no copy is made the internally stored eigenvectors
             # could be modified unintentionally.
             rval = self.flatE[slicer].copy()
-            return rval.reshape((neofs,) + self.originalshape)
         elif eofscaling == 1:
             # Divide by the square-root of the eigenvalues.
             rval = self.flatE[slicer] / np.sqrt(self.L[slicer])[:,_NA]
-            return rval.reshape((neofs,) + self.originalshape)
         elif eofscaling == 2:
             # Multiply by the square-root of the eigenvalues.
             rval = self.flatE[slicer] * np.sqrt(self.L[slicer])[:,_NA]
-            return rval.reshape((neofs,) + self.originalshape)
         else:
             raise EofError("invalid eof scaling option: %s" % repr(eofscaling))
+        if self._filled:
+            rval = ma.array(rval, mask=np.where(np.isnan(rval), True, False))
+        return rval.reshape((neofs,) + self.originalshape)
 
     def eigenvalues(self, neigs=None):
         """Eigenvalues (decreasing variances) associated with each EOF.
@@ -264,7 +266,9 @@ class EofSolver(object):
         # The results of the correlation_map function will be a masked array.
         # For consistency with other return values, this is converted to a
         # numpy array filled with numpy.nan.
-        return c.filled(fill_value=np.nan)
+        if not self._filled:
+            c = c.filled(fill_value=np.nan)
+        return c
 
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
         """
@@ -297,7 +301,9 @@ class EofSolver(object):
         # The results of the covariance_map function will be a masked array.
         # For consitsency with other return values, this is converted to a
         # numpy array filled with numpy.nan.
-        return c.filled(fill_value=np.nan)
+        if not self._filled:
+            c = c.filled(fill_value=np.nan)
+        return c
         
     def varianceFraction(self, neigs=None):
         """Fractional EOF variances.
@@ -352,6 +358,8 @@ class EofSolver(object):
         if self.weights is not None:
             rval = rval / self.weights
         # Return the reconstructed field.
+        if self._filled:
+            rval = ma.array(rval, mask=np.where(np.isnan(rval), True, False))
         return rval
 
     def northTest(self, neigs=None, vfscaled=False):

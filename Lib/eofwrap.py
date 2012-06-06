@@ -219,9 +219,7 @@ class Eof(object):
 
         """
         eofs = self.eofobj.eofs(eofscaling, neofs)
-        eofs[np.where(np.isnan(eofs))] = self.missingValue
-        eofs = ma.array(eofs, fill_value=self.missingValue,
-                mask=np.where(eofs==self.missingValue, True, False))
+        eofs.fill_value = self.missingValue
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
         axlist = [eofax] + self.channels
         eofs = cdms2.createVariable(eofs, id="eofs", axes=axlist,
@@ -290,9 +288,7 @@ class Eof(object):
         
         """
         eofs = self.eofobj.eofsAsCorrelation(neofs)
-        eofs[np.where(np.isnan(eofs))] = self.missingValue
-        eofs = ma.array(eofs, fill_value=self.missingValue,
-                mask=np.where(eofs==self.missingValue, True, False))
+        eofs.fill_value = self.missingValue
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
         axlist = [eofax] + self.channels
         eofs = cdms2.createVariable(eofs, id="eofs_corr", axes=axlist,
@@ -340,9 +336,7 @@ class Eof(object):
         
         """
         eofs = self.eofobj.eofsAsCovariance(neofs, pcscaling)
-        eofs[np.where(np.isnan(eofs))] = self.missingValue
-        eofs = ma.array(eofs, fill_value=self.missingValue,
-                mask=np.where(eofs==self.missingValue, True, False))
+        eofs.fill_value = self.missingValue
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
         axlist = [eofax] + self.channels
         eofs = cdms2.createVariable(eofs, id="eofs_cov", axes=axlist,
@@ -418,9 +412,7 @@ class Eof(object):
         
         """
         rfield = self.eofobj.reconstructedField(neofs)
-        rfield[np.where(np.isnan(rfield))] = self.missingValue
-        rfield = ma.array(rfield, fill_value=self.missingValue,
-                mask=np.where(rfield==self.missingValue, True, False))
+        rfield.fill_value = self.missingValue
         axlist = [self.timeax] + self.channels
         rfield = cdms2.createVariable(rfield, id="rcon", axes=axlist,
                 fill_value=self.missingValue)

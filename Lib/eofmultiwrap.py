@@ -21,7 +21,6 @@ variables.
 # along with eof2.  If not, see <http://www.gnu.org/licenses/>.
 import cdms2
 import numpy as np
-import numpy.ma as ma
 
 from eofmultisolve import MultipleEofSolver
 from tools import weights_array
@@ -237,9 +236,7 @@ class MultipleEof(object):
         varset = list()
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
-            eofset[iset][np.where(np.isnan(eofset[iset]))] = self._multimissing[iset]
-            eofset[iset] = ma.array(eofset[iset], fill_value=self._multimissing[iset],
-                mask=np.where(eofset[iset]==self._multimissing[iset], True, False))
+            eofset[iset].fill_value = self._multimissing[iset]
             eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs", axes=axlist,
                     fill_value=self._multimissing[iset])
             eofset[iset].name = "empirical_orthogonal_functions"
@@ -310,9 +307,7 @@ class MultipleEof(object):
         eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
-            eofset[iset][np.where(np.isnan(eofset[iset]))] = self._multimissing[iset]
-            eofset[iset] = ma.array(eofset[iset], fill_value=self._multimissing[iset],
-                mask=np.where(eofset[iset]==self._multimissing[iset], True, False))
+            eofset[iset].fill_value = self._multimissing[iset]
             eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs_corr", axes=axlist,
                     fill_value=self._multimissing[iset])
             eofset[iset].name = "empirical_orthogonal_functions"
@@ -362,9 +357,7 @@ class MultipleEof(object):
         eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
             axlist = [eofax] + self._multichannels[iset]
-            eofset[iset][np.where(np.isnan(eofset[iset]))] = self._multimissing[iset]
-            eofset[iset] = ma.array(eofset[iset], fill_value=self._multimissing[iset],
-                mask=np.where(eofset[iset]==self._multimissing[iset], True, False))
+            eofset[iset].fill_value = self._multimissing[iset]
             eofset[iset] = cdms2.createVariable(eofset[iset], id="eofs_cov", axes=axlist,
                     fill_value=self._multimissing[iset])
             eofset[iset].name = "empirical_orthogonal_functions"
@@ -440,9 +433,7 @@ class MultipleEof(object):
         rfset = self.eofobj.reconstructedField(neofs)
         for iset in xrange(self._numdsets):
             axlist = [self.timeax] + self._multichannels[iset]
-            rfset[iset][np.where(np.isnan(rfset[iset]))] = self._multimissing[iset]
-            rfset[iset] = ma.array(rfset[iset], fill_value=self._multimissing[iset],
-                mask=np.where(rfset[iset]==self._multimissing[iset], True, False))
+            rfset[iset].fill_value = self._multimissing[iset]
             rfset[iset] = cdms2.createVariable(rfset[iset], id="rcon", axes=axlist,
                     fill_value=self._multimissing[iset])
             rfset[iset].long_name = "reconstructed_field"
