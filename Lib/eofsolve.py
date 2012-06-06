@@ -288,9 +288,12 @@ class EofSolver(object):
 
         """
         pcs = self.pcs(npcs=neofs, pcscaling=pcscaling)
-        c = covariance_map(pcs,
-                self.dataset.reshape((self.records,)+self.originalshape),
-                ddof=self.ddof)
+        # Divide the input data by the weighting (if any) before computing
+        # the covariance maps.
+        data = self.dataset.reshape((self.records,)+self.originalshape)
+        if self.weights is not None:
+            data /= self.weights
+        c = covariance_map(pcs, data, ddof=self.ddof)
         # The results of the covariance_map function will be a masked array.
         # For consitsency with other return values, this is converted to a
         # numpy array filled with numpy.nan.
