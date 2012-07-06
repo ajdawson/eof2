@@ -1,0 +1,184 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; eof2 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/extension.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="eof2 1.5.0 documentation" href="index.html" />
+    <link rel="next" title="Practical Example: Sea Surface Temperature (ENSO)" href="pexsst.html" />
+    <link rel="prev" title="eof2’s Documentation Contents" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pexsst.html" title="Practical Example: Sea Surface Temperature (ENSO)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="eof2’s Documentation Contents"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">eof2 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference internal" href="api.html#module-eof2" title="eof2"><tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt></a> is a Python package for EOF analysis of spatial-temporal data. Some of the key features of <a class="reference internal" href="api.html#module-eof2" title="eof2"><tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt></a> are:</p>
+<ul class="simple">
+<li><strong>Suitable for large data sets:</strong> computationally efficient for the large output data sets of modern climate models.</li>
+<li><strong>Transparent handling of missing values:</strong> missing values are removed automatically when computing EOFs and placed back into output fields.</li>
+<li><strong>Automatic metadata:</strong> metadata from input fields is used to construct metadata for output fields (requires the <tt class="xref py py-mod docutils literal"><span class="pre">cdms2</span></tt> module).</li>
+<li><strong>No Fortran dependencies:</strong> a fast implementation written in Python using the power of <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt>, so no compilers required.</li>
+</ul>
+<div class="section" id="download-and-installation">
+<h2>Download and Installation<a class="headerlink" href="#download-and-installation" title="Permalink to this headline">¶</a></h2>
+<p>The package can be downloaded from <a class="reference external" href="http://github.com/ajdawson/eof2">github</a>. To get the latest source and install the module on your system run:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>git clone git://github.com/ajdawson/eof2.git
+<span class="nv">$ </span><span class="nb">cd </span>eof2
+<span class="nv">$ </span>sudo python setup.py install
+</pre></div>
+</div>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="api.html#module-eof2" title="eof2"><tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt></a> package provides two interfaces for EOF analysis: one for <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays or masked arrays; and one for <tt class="xref py py-mod docutils literal"><span class="pre">cdms2</span></tt> variables, which preserves metadata. The two interfaces support exactly the same sets of operations.</p>
+<p>Regardless of which interface you use, the basic usage is the same. The EOF analysis is handled by <a class="reference internal" href="api.html#eof2.Eof" title="eof2.Eof"><tt class="xref py py-class docutils literal"><span class="pre">eof2.Eof</span></tt></a> (or <tt class="xref py py-class docutils literal"><span class="pre">eof2.EofSolve</span></tt> for the <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> interface). The EOF solution is computed when an instance of <a class="reference internal" href="api.html#eof2.Eof" title="eof2.Eof"><tt class="xref py py-class docutils literal"><span class="pre">eof2.Eof</span></tt></a> (or <tt class="xref py py-class docutils literal"><span class="pre">eof2.EofSolve</span></tt>) is initialized. Method calls are then used to return quantities of interest.</p>
+<p>The following is a very simple illustrative example which computes the leading 2 EOFs of a temporal spatial field:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">cdms2</span>
+<span class="kn">from</span> <span class="nn">eof2</span> <span class="kn">import</span> <span class="n">Eof</span>
+
+<span class="c"># Read a spatial-temporal field. Time must be the first dimension.</span>
+<span class="n">ncin</span> <span class="o">=</span> <span class="n">cdms2</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s">&#39;sst_monthly.nc&#39;</span><span class="p">)</span>
+<span class="n">sst</span> <span class="o">=</span> <span class="n">ncin</span><span class="p">(</span><span class="s">&#39;sst&#39;</span><span class="p">)</span>
+<span class="n">ncin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<span class="c"># Initialize and Eof object. Square-root of cosine of latitude weights</span>
+<span class="c"># are used.</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Eof</span><span class="p">(</span><span class="n">sst</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s">&#39;coslat&#39;</span><span class="p">)</span>
+
+<span class="c"># Retrieve the first two EOFs.</span>
+<span class="n">eofs</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">eofs</span><span class="p">(</span><span class="n">neofs</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>This package requires as a minimum that you have <a class="reference external" href="http://http://numpy.scipy.org/">numpy</a> available. The metadata enabled interface can only be used if the <tt class="xref py py-mod docutils literal"><span class="pre">cdms2</span></tt> module is also available. This module is distributed as part of the <a class="reference external" href="http://uv-cdat.llnl.gov">UV-CDAT</a> project. It is also distributed as part of the <a class="reference external" href="http://proj.badc.rl.ac.uk/cedaservices/wiki/CdatLite">cdat_lite</a> package.</p>
+</div>
+<div class="section" id="developing-and-contributing">
+<h2>Developing and Contributing<a class="headerlink" href="#developing-and-contributing" title="Permalink to this headline">¶</a></h2>
+<p>All development is done through the <a class="reference external" href="http://github.com/ajdawson/eof2">github</a> system. To check out the latest sources run:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nv">$ </span>git clone git://github.com/ajdawson/eof2.git
+</pre></div>
+</div>
+<p>Please file bug reports and feature requests using the github <a class="reference external" href="http://github.com/ajdawson/eof2/issues?state=open">issues</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3>Table Of Contents</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#download-and-installation">Download and Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#developing-and-contributing">Developing and Contributing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pexsst.html">Practical Example: Sea Surface Temperature (ENSO)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refwrap.html">Metadata-Enabled Interface Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refsolve.html">Non-metadata Interface Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">Full API Reference</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">eof2&#8217;s Documentation Contents</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pexsst.html"
+                        title="next chapter">Practical Example: Sea Surface Temperature (ENSO)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pexsst.html" title="Practical Example: Sea Surface Temperature (ENSO)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="eof2’s Documentation Contents"
+             >previous</a> |</li>
+        <li><a href="index.html">eof2 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Andrew Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
