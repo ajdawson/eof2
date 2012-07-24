@@ -1,0 +1,203 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>EOF Analysis &mdash; eof2 1.5.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/extension.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="eof2 1.5.0 documentation" href="index.html" />
+    <link rel="next" title="Practical Example: Sea Surface Temperature (ENSO)" href="pexsst.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pexsst.html" title="Practical Example: Sea Surface Temperature (ENSO)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">eof2 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="eof-analysis">
+<h1>EOF Analysis<a class="headerlink" href="#eof-analysis" title="Permalink to this headline">¶</a></h1>
+<p>The technique of Empirical Orthogonal Function analysis, usually just referred to as EOF analysis, is very common in geophysical sciences.
+The general aim of EOF analysis is to simplify a spatial-temporal data set by transforming it to spatial patterns of variability and temporal projections of these patterns.
+The spatial patterns are the EOFs, and can be thought of as basis functions in terms of variance.
+The associated temporal projections are the pricipal components (PCs) and are the temporal coefficients of the EOF patterns.</p>
+<p>EOF analysis is really just re-expressing the original data set in terms of a variance basis.
+The original data set can be completely reconstructed using the EOFs and PCs.
+iHowever, in practice it is often only a subset of the EOFs that are of interest.
+Individual EOFs can sometimes have a physical interpretation assigned to them, or sometimes one wishes to produce a data set that is truncated in terms of variance by reconstructing the original data set using only a limited number of EOFs.</p>
+<div class="section" id="method-of-solution-in-eof2">
+<h2>Method of Solution in <tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt><a class="headerlink" href="#method-of-solution-in-eof2" title="Permalink to this headline">¶</a></h2>
+<p>A method based on <a class="reference external" href="http://en.wikipedia.org/wiki/Singular_value_decomposition">singular value decomposition (SVD)</a> is used in <tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt> <a class="footnote-reference" href="#id5" id="id1">[1]</a>. This avoids having to compute the covariance matrix directly and is therefore optimal for data sets with a large spatial dimension.</p>
+<p>The input to EOF analysis is a spatial-temporal field. This is represented in Python by an array (or <tt class="xref py py-mod docutils literal"><span class="pre">cdms2</span></tt> variable) of two or more dimensions. When one inputs an array or variable into an <tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt> solver it is re-shaped and stored internally as a two-dimensional array where the first dimension is time and the second dimension is space. It is a formal requirement of EOF analysis that this array have columns with zero-mean. The <tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt> solvers will automatically attempt to subtract the mean from each column unless the keyword argument <em>center</em> is set to <em>False</em>. This may be useful when anomalies have already been computed.</p>
+<p>Any missing values in the two-dimensional data array are identified and removed <a class="footnote-reference" href="#id6" id="id2">[2]</a>. The SVD of the anomaly matrix is then computed. The SVD computed is the truncated form, where only singular vectors (EOFs/PCs) that correspond to non-zero singular values are returned. Since the singular value is related to the fraction of variance represented by an EOF, neglecting those with singular values of zero retains a full solution. This method further reduces the computational cost of the analysis <a class="footnote-reference" href="#id7" id="id3">[3]</a>. The EOFs are the right singular vectors and the standardized PCs are the left singular vectors while the squared singular values are the variances associated with each EOF.</p>
+</div>
+<div class="section" id="mathematical-description">
+<h2>Mathematical Description<a class="headerlink" href="#mathematical-description" title="Permalink to this headline">¶</a></h2>
+<p>Consider a data set that consists of observations of a single geophysical variable at multiple positions in space <span class="math">\(x_1, x_2, \ldots, x_M\)</span> and at multiple times <span class="math">\(t_1, t_2, \ldots, t_N,\)</span>.
+These observations are arranged in a matrix <span class="math">\(\mathbf{F}\)</span> with dimension <span class="math">\(N \times M\)</span> such that each row of <span class="math">\(\mathbf{F}\)</span> is a map of observations at all points in space at a particular time, and each column is a time-series of observations at a particular point at all times.
+The time-mean is then removed from of the <span class="math">\(M\)</span> time series to form the anomaly matrix <span class="math">\(\mathbf{A}\)</span> whose columns have zero-mean:</p>
+<div class="math">
+\[\begin{split}\mathbf{A} = \begin{pmatrix}
+    a_{1,1} &amp; a_{1,2} &amp; \cdots &amp; a_{1,M} \\
+    a_{2,1} &amp; a_{2,2} &amp; \cdots &amp; a_{2,M} \\
+    \vdots  &amp; \vdots  &amp; \ddots &amp; \vdots \\
+    a_{N,1} &amp; a_{N,2} &amp; \cdots &amp; a_{N,M}
+\end{pmatrix}\end{split}\]</div>
+<p>Typically one would then compute the covariance matrix <span class="math">\(\mathbf{R} = \mathbf{A}^\intercal \mathbf{A}\)</span> and solve the eigenvalue problem:</p>
+<div class="math" id="equation-eig">
+<span class="eqno">(1)</span>\[\mathbf{R C} = \mathbf{C} \Lambda\]</div>
+<p>where the columns of <span class="math">\(\mathbf{C}\)</span> are the eigenvectors (EOFs) and the eigenvalues (EOF variances) are on the leading diagonal of <span class="math">\(\Lambda\)</span>. The PCs <span class="math">\(\mathbf{P}\)</span> can then be computed from the projection of <span class="math">\(\mathbf{A}\)</span> onto the EOFs:</p>
+<div class="math">
+\[\mathbf{P} = \mathbf{A C}\]</div>
+<p>The SVD method used by the <tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt> solvers is slightly different to this. Instead of computing the covariance matrix directly it computes the SVD of <span class="math">\(\mathbf{A}\)</span>:</p>
+<div class="math">
+\[\mathrm{SVD}\left(\mathbf{A}\right) = \mathbf{U} \Gamma \mathbf{V}^\intercal\]</div>
+<p>The columns of <span class="math">\(\mathbf{U}\)</span> and <span class="math">\(\mathbf{V}\)</span> are the singular vectors and the singular values are on the leading diagonal of <span class="math">\(\Gamma\)</span>. To show relation between the SVD and <a href="#equation-eig">(1)</a> we express the covariance matrix in two ways, first a rearranged form of <a href="#equation-eig">(1)</a> <a class="footnote-reference" href="#id8" id="id4">[4]</a>:</p>
+<div class="math" id="equation-R1">
+<span class="eqno">(2)</span>\[\mathbf{R} = \mathbf{C} \Lambda \mathbf{C}^\intercal\]</div>
+<p>and second the expression for the covariance matrix <span class="math">\(\mathbf{R}\)</span> after first taking the SVD of <span class="math">\(\mathbf{A}\)</span>:</p>
+<div class="math" id="equation-R2">
+<span class="eqno">(3)</span>\[\mathbf{R} = \mathbf{A}^\intercal \mathbf{A} = \left( \mathbf{U} \Gamma \mathbf{V}^\intercal \right)^\intercal \left( \mathbf{U} \Gamma \mathbf{V}^\intercal \right) = \mathbf{V} \Gamma^\intercal \mathbf{U}^\intercal \mathbf{U} \Gamma \mathbf{V}^\intercal = \mathbf{V} \Gamma^\intercal \Gamma \mathbf{V}^\intercal\]</div>
+<p>It should be clear from <a href="#equation-R1">(2)</a> and <a href="#equation-R2">(3)</a> that <span class="math">\(\mathbf{C} = \mathbf{V}\)</span> and <span class="math">\(\Lambda = \Gamma^\intercal \Gamma\)</span>. An extra benefit of the SVD method is that the singular vectors in <span class="math">\(\mathbf{U}\)</span> are the standardized PCs. This can be shown by first forming an expression for <span class="math">\(\mathbf{A}\)</span> in terms of the EOFs and the PCs, note that this is the reconstruction expression:</p>
+<div class="math">
+\[\mathbf{A} = \mathbf{P} \mathbf{C}^\intercal\]</div>
+<p>By defining a normalized PC <span class="math">\(\phi_j\)</span> as</p>
+<div class="math">
+\[\phi_j = \dfrac{\mathbf{p}_j}{\sqrt{\lambda_j}}\]</div>
+<p>where <span class="math">\(\mathbf{p}_j\)</span> is a column of <span class="math">\(\mathbf{P}\)</span>, and defining a diagonal matrix <span class="math">\(\mathbf{D}\)</span> with <span class="math">\(\sqrt{\lambda}_j\)</span> on the leading diagonal and a matrix <span class="math">\(\Phi\)</span> of the ordered <span class="math">\(\phi_j\)</span> as columns we can write a new expression for <span class="math">\(\mathbf{A}\)</span>:</p>
+<div class="math">
+\[\mathbf{A} = \Phi \mathbf{D} \mathbf{C}^\intercal\]</div>
+<p>It should be clear that this expression is equivalent to the SVD of <span class="math">\(\mathbf{A}\)</span> and therefore that the left singular vectors are the PCs scaled to unit variance.</p>
+<p class="rubric">Footnotes</p>
+<table class="docutils footnote" frame="void" id="id5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>Note that this is the linear algebra technique and is different to the coupled SVD analysis of two fields. The latter technique is often (and less ambiguously) referred to as maximum covariance analysis (MCA).</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>An often used alternative and equally valid strategy is to set missing values to a constant value. This method yields the same solution since a constant time-series has zero-variance, but increases the computational cost of computing the EOFs.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[3]</a></td><td>For an <span class="math">\(N\)</span> by <span class="math">\(M\)</span> anomaly matrix the rank of the corresponding covariance matrix can be at most <span class="math">\(\mathrm{min}\left(m,n\right)\)</span>. The number of zero eigenvalues is at least <span class="math">\(\left|m - n\right|\)</span>.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[4]</a></td><td>This rearrangement is possible since the column eigenvectors in <span class="math">\(\mathbf{C}\)</span> are mutually orthogonal and hence <span class="math">\(\mathbf{C} \mathbf{C}^\intercal = \mathbf{I}\)</span> where <span class="math">\(\mathbf{I}\)</span> is the identity matrix.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<h3>Table Of Contents</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">EOF Analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#method-of-solution-in-eof2">Method of Solution in <tt class="docutils literal"><span class="pre">eof2</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mathematical-description">Mathematical Description</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pexsst.html">Practical Example: Sea Surface Temperature (ENSO)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refwrap.html">Metadata-Enabled Interface Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refsolve.html">Non-metadata Interface Reference</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pexsst.html"
+                        title="next chapter">Practical Example: Sea Surface Temperature (ENSO)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/eofs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pexsst.html" title="Practical Example: Sea Surface Temperature (ENSO)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="index.html">eof2 1.5.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Andrew Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

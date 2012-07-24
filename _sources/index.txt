@@ -10,16 +10,15 @@ eof2's Documentation Contents
    :maxdepth: 2
 
    intro.rst
+   eofs.rst
    pexsst.rst
    refwrap.rst
    refsolve.rst
-   api.rst
 
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 

@@ -27,7 +27,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="eof2 1.5.0 documentation" href="index.html" />
-    <link rel="next" title="Practical Example: Sea Surface Temperature (ENSO)" href="pexsst.html" />
+    <link rel="next" title="EOF Analysis" href="eofs.html" />
     <link rel="prev" title="eof2’s Documentation Contents" href="index.html" /> 
   </head>
   <body>
@@ -38,10 +38,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="pexsst.html" title="Practical Example: Sea Surface Temperature (ENSO)"
+          <a href="eofs.html" title="EOF Analysis"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="eof2’s Documentation Contents"
@@ -57,7 +54,7 @@
             
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p><a class="reference internal" href="api.html#module-eof2" title="eof2"><tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt></a> is a Python package for EOF analysis of spatial-temporal data. Some of the key features of <a class="reference internal" href="api.html#module-eof2" title="eof2"><tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt></a> are:</p>
+<p><tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt> is a Python package for EOF analysis of spatial-temporal data. Some of the key features of <tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt> are:</p>
 <ul class="simple">
 <li><strong>Suitable for large data sets:</strong> computationally efficient for the large output data sets of modern climate models.</li>
 <li><strong>Transparent handling of missing values:</strong> missing values are removed automatically when computing EOFs and placed back into output fields.</li>
@@ -75,8 +72,8 @@
 </div>
 <div class="section" id="getting-started">
 <h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
-<p>The <a class="reference internal" href="api.html#module-eof2" title="eof2"><tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt></a> package provides two interfaces for EOF analysis: one for <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays or masked arrays; and one for <tt class="xref py py-mod docutils literal"><span class="pre">cdms2</span></tt> variables, which preserves metadata. The two interfaces support exactly the same sets of operations.</p>
-<p>Regardless of which interface you use, the basic usage is the same. The EOF analysis is handled by <a class="reference internal" href="api.html#eof2.Eof" title="eof2.Eof"><tt class="xref py py-class docutils literal"><span class="pre">eof2.Eof</span></tt></a> (or <tt class="xref py py-class docutils literal"><span class="pre">eof2.EofSolve</span></tt> for the <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> interface). The EOF solution is computed when an instance of <a class="reference internal" href="api.html#eof2.Eof" title="eof2.Eof"><tt class="xref py py-class docutils literal"><span class="pre">eof2.Eof</span></tt></a> (or <tt class="xref py py-class docutils literal"><span class="pre">eof2.EofSolve</span></tt>) is initialized. Method calls are then used to return quantities of interest.</p>
+<p>The <tt class="xref py py-mod docutils literal"><span class="pre">eof2</span></tt> package provides two interfaces for EOF analysis: one for <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> arrays or masked arrays; and one for <tt class="xref py py-mod docutils literal"><span class="pre">cdms2</span></tt> variables, which preserves metadata. The two interfaces support exactly the same sets of operations.</p>
+<p>Regardless of which interface you use, the basic usage is the same. The EOF analysis is handled by <a class="reference internal" href="refwrap.html#eof2.Eof" title="eof2.Eof"><tt class="xref py py-class docutils literal"><span class="pre">eof2.Eof</span></tt></a> (or <tt class="xref py py-class docutils literal"><span class="pre">eof2.EofSolve</span></tt> for the <tt class="xref py py-mod docutils literal"><span class="pre">numpy</span></tt> interface). The EOF solution is computed when an instance of <a class="reference internal" href="refwrap.html#eof2.Eof" title="eof2.Eof"><tt class="xref py py-class docutils literal"><span class="pre">eof2.Eof</span></tt></a> (or <tt class="xref py py-class docutils literal"><span class="pre">eof2.EofSolve</span></tt>) is initialized. Method calls are then used to return quantities of interest.</p>
 <p>The following is a very simple illustrative example which computes the leading 2 EOFs of a temporal spatial field:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">cdms2</span>
 <span class="kn">from</span> <span class="nn">eof2</span> <span class="kn">import</span> <span class="n">Eof</span>
@@ -124,18 +121,18 @@
 <li class="toctree-l2"><a class="reference internal" href="#developing-and-contributing">Developing and Contributing</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="eofs.html">EOF Analysis</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pexsst.html">Practical Example: Sea Surface Temperature (ENSO)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="refwrap.html">Metadata-Enabled Interface Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="refsolve.html">Non-metadata Interface Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="api.html">Full API Reference</a></li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
                         title="previous chapter">eof2&#8217;s Documentation Contents</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="pexsst.html"
-                        title="next chapter">Practical Example: Sea Surface Temperature (ENSO)</a></p>
+  <p class="topless"><a href="eofs.html"
+                        title="next chapter">EOF Analysis</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/intro.txt"
@@ -165,10 +162,7 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="pexsst.html" title="Practical Example: Sea Surface Temperature (ENSO)"
+          <a href="eofs.html" title="EOF Analysis"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="eof2’s Documentation Contents"
@@ -178,7 +172,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2012, Andrew Dawson.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
