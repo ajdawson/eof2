@@ -26,7 +26,7 @@ Getting Started
 
 The :py:mod:`eof2` package provides two interfaces for EOF analysis: one for :py:mod:`numpy` arrays or masked arrays; and one for :py:mod:`cdms2` variables, which preserves metadata. The two interfaces support exactly the same sets of operations.
 
-Regardless of which interface you use, the basic usage is the same. The EOF analysis is handled by :py:class:`eof2.Eof` (or :py:class:`eof2.EofSolve` for the :py:mod:`numpy` interface). The EOF solution is computed when an instance of :py:class:`eof2.Eof` (or :py:class:`eof2.EofSolve`) is initialized. Method calls are then used to return quantities of interest.
+Regardless of which interface you use, the basic usage is the same. The EOF analysis is handled by :py:class:`eof2.Eof <eof2.eofwrap.Eof>` (or :py:class:`eof2.EofSolver <eof2.eofsolve.EofSolver>` for the :py:mod:`numpy` interface). The EOF solution is computed when an instance of :py:class:`eof2.Eof <eof2.eofwrap.Eof>` (or :py:class:`eof2.EofSolver <eof2.eofsolve.EofSolver>`) is initialized. Method calls are then used to return quantities of interest.
 
 The following is a very simple illustrative example which computes the leading 2 EOFs of a temporal spatial field:
 

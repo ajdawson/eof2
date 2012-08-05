@@ -11,14 +11,6 @@ eof2's Documentation Contents
 
    intro.rst
    eofs.rst
-   pexsst.rst
-   refwrap.rst
-   refsolve.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
+   examples.rst
+   references.rst
 

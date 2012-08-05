@@ -42,7 +42,7 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 	-rm -rf ./*.html
 	-rm -rf objects.inv searchindex.js
-	-rm -rf _source _static _modules _images
+	-rm -rf _sources _static _modules _images example_scripts
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) .
