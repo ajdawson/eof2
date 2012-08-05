@@ -20,6 +20,8 @@ The package can be downloaded from `github <http://github.com/ajdawson/eof2>`_. 
    $ cd eof2
    $ sudo python setup.py install
 
+or download a zip file from the `project's code page <http://github.com/ajdawson/eof2>`_.
+
 
 Getting Started
 ---------------
