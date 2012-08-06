@@ -13,7 +13,7 @@ Reference documentation for both :py:mod:`eof2` interfaces is available:
 
 .. note::
 
-   The solver classes :py:class`eof2.Eof` and :py:class:`eof2.EofSolver` are
+   The solver classes :py:class:`eof2.Eof` and :py:class:`eof2.EofSolver` are
    made available at the top level of :py:mod:`eof2`, but are actually defined
    in separate modules :py:mod:`eof2.eofwrap` and :py:mod:`eof2.eofsolve`
    respectively.

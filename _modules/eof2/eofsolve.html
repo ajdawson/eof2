@@ -341,8 +341,7 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pcs</span><span class="p">(</span><span class="n">npcs</span><span class="o">=</span><span class="n">neofs</span><span class="p">,</span> <span class="n">pcscaling</span><span class="o">=</span><span class="n">pcscaling</span><span class="p">)</span>
-        <span class="c"># Divide the input data by the weighting (if any) before computing</span>
-        <span class="c"># the covariance maps.</span>
+        <span class="c"># MUST DIVIDE BY WEIGHTS</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">records</span><span class="p">,)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">originalshape</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span>
@@ -595,7 +594,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2012, Andrew Dawson.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
