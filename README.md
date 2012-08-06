@@ -36,10 +36,10 @@ Tools ([CDAT](http://www2-pcmdi.llnl.gov/cdat)) or can be obtained separately in
 Documentation
 -------------
 
-The package docstrings are very complete and are currently the primary source of
-documentation.
+Documentation is available [online](http://ajdawson.github.com/eof2). The package
+docstrings are also very complete and can be used as a source of reference when working
+interactively.
 
-A few short practical [examples](https://github.com/ajdawson/eof2/wiki) are also available.
 
 Frequently asked questions
 --------------------------
