@@ -15,7 +15,7 @@ Many of the examples have a version for each of
 Geopotential height (NAO) [:py:mod:`cdms2` interface]
 -----------------------------------------------------
 
-.. plot:: example_scripts/cdms2/hgt_example.py 
+.. plot:: examples/cdms2/hgt_example.py 
    :include-source:
 
 
@@ -24,7 +24,7 @@ Geopotential height (NAO) [:py:mod:`cdms2` interface]
 Sea surface temperature (El |Nino|) [:py:mod:`cdms2` interface]
 ---------------------------------------------------------------
 
-.. plot:: example_scripts/cdms2/sst_example.py 
+.. plot:: examples/cdms2/sst_example.py 
    :include-source:
 
 
@@ -33,7 +33,7 @@ Sea surface temperature (El |Nino|) [:py:mod:`cdms2` interface]
 Geopotential height (NAO) [:py:mod:`numpy` interface]
 -----------------------------------------------------
 
-.. plot:: example_scripts/numpy/hgt_example.py 
+.. plot:: examples/numpy/hgt_example.py 
    :include-source:
 
 
@@ -43,7 +43,7 @@ Sea surface temperature (El |Nino|) [:py:mod:`numpy` interface]
 ---------------------------------------------------------------
 
 
-.. plot:: example_scripts/numpy/sst_example.py 
+.. plot:: examples/numpy/sst_example.py 
     :include-source:
 
 
