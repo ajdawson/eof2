@@ -1,0 +1,9 @@
+{% extends "!layout.html" %}
+
+{% set css_files = css_files + ["_static/extension.css"] %}
+
+{%- block sidebartoc %}
+<h3>{{ _('Table Of Contents') }}</h3>
+{{ toctree() }}
+{%- endblock %}
+
