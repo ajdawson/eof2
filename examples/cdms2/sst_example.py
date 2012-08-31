@@ -57,3 +57,5 @@ plt.xlabel('Year')
 plt.ylabel('Normalized Units')
 plt.xlim(1962, 2012)
 plt.ylim(-3, 3)
+
+plt.show()
