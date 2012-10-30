@@ -407,8 +407,7 @@ class EofSolver(object):
         """Weights used for the analysis."""
         return self.weights
 
-    def projectField(self, field, neofs=None, eofscaling=0, weighted=True,
-            notime=False):
+    def projectField(self, field, neofs=None, eofscaling=0, weighted=True):
         """Project a field onto the EOFs.
         
         Given a field, projects it onto the EOFs to generate a
@@ -442,19 +441,26 @@ class EofSolver(object):
               eigenvalue.
 
         *weighted*
-            If *True* then the EOFs are weighted prior to projection. If
+            If *True* then the field is weighted prior to projection. If
             *False* then no weighting is applied. Defaults to *True*
             (weighting is applied). Generally only the default setting
             should be used.
 
-        *notime*
-            If *True*, indicates that the input field has no time
-            dimension and should be treated as spatial data. If *False*
-            then the first dimension of the field will be assumed to be
-            a time dimension. Defaults to *False* (a time dimension is
-            assumed).
-                
         """
+        # Check that the shape/dimension of the input field is compatible with
+        # the EOFs.
+        input_ndim = field.ndim
+        eof_ndim = len(self.originalshape) + 1
+        if eof_ndim - input_ndim not in (0, 1):
+            raise EofError("field and EOFs have incompatible dimensions")
+        # Check that the rightmost dimensions of the input field are the same as
+        # the EOFs.
+        if input_ndim == eof_ndim:
+            check_shape = field.shape[1:]
+        else:
+            check_shape = field.shape
+        if check_shape != self.originalshape:
+            raise EofError("field and EOFs have incompatible shapes")
         # Create a slice object for truncating the EOFs.
         slicer = slice(0, neofs)
         # If required, weight the dataset with the same weighting that was
@@ -464,28 +470,26 @@ class EofSolver(object):
             wts = self.getWeights()
             if wts is not None:
                 field = field * wts
+        # Fill missing values with NaN if this is a masked array.
         try:
             field = field.filled(fill_value=np.nan)
         except AttributeError:
             pass
-        # Flatten the input field into [time, space] dimensionality unless it
-        # is indicated that there is no time dimension present.
-        if notime:
-            channels = np.product(field.shape)
-            field_flat = field.reshape([channels])
-            nonMissingIndex = np.where(np.isnan(field_flat) == False)[0]
-        else:
-            records = field.shape[0]
-            channels = np.product(field.shape[1:])
-            field_flat = field.reshape([records, channels])
-            nonMissingIndex = np.where(np.isnan(field_flat[0]) == False)[0]
-        # Isolate the non-missing points.
-        field_flat = field_flat[..., nonMissingIndex]
-        # Remove missing values from the flat EOFs.
+        # Flatten the input field into [time, space] dimensionality.
+        if eof_ndim > input_ndim:
+            field = field.reshape((1,) + field.shape)
+        records = field.shape[0]
+        channels = np.product(field.shape[1:])
+        field_flat = field.reshape([records, channels])
+        # Locate the non-missing values and isolate them.
+        nonMissingIndex = np.where(np.isnan(field_flat[0]) == False)[0]
+        field_flat = field_flat[:, nonMissingIndex]
+        # Locate the non-missing values in the EOFs and check they match those
+        # in the input field, then isolate the non-missing values.
         eofNonMissingIndex = np.where(np.isnan(self.flatE[0]) == False)[0]
         if eofNonMissingIndex.shape != nonMissingIndex.shape or \
                 (eofNonMissingIndex != nonMissingIndex).any():
-            raise EofError("field and EOFs have different missing values")
+            raise EofError("field and EOFs have different missing value locations")
         eofs_flat = self.flatE[slicer, eofNonMissingIndex]
         if eofscaling == 1:
             eofs_flat /= np.sqrt(self.L[slicer])[:,_NA]
@@ -493,6 +497,10 @@ class EofSolver(object):
             eofs_flat *= np.sqrt(self.L[slicer])[:,_NA]
         # Project the field onto the EOFs using a matrix multiplication.
         projected_pcs = np.dot(field_flat, eofs_flat.T)
+        if input_ndim < eof_ndim:
+            # If an extra dimension was introduced, remove it before returning
+            # the projected PCs.
+            projected_pcs = projected_pcs[0]
         return projected_pcs
 
 
@@ -502,4 +510,3 @@ EofNumPy = EofSolver
 
 if __name__ == "__main__":
     pass
-

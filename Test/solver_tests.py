@@ -89,6 +89,20 @@ class SolverTestCase(TestCase):
         err = error(rf, self.sf)
         self.assertAlmostEqual(err, 0., places=2)
 
+    def test_projection(self):
+        identify("field projection")
+        pf = self.eofobj.projectField(self.sf)
+        pcs = self.eofobj.pcs()
+        err = error(pf, pcs)
+        self.assertAlmostEqual(err, 0., places=4)
+
+    def test_projection_single(self):
+        identify("single field projection")
+        pf = self.eofobj.projectField(self.sf[12])
+        pcs = self.eofobj.pcs()[12]
+        err = error(pf, pcs)
+        self.assertAlmostEqual(err, 0., places=3)
+
 
 @unittest.skipIf('Eof' not in dir(eof2) or 'cdms2' not in dir(),
         'library component not available')

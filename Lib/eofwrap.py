@@ -500,7 +500,8 @@ class Eof(object):
         (including missing values in the same places) as the original
         input to the :py:class:`~eof2.Eof` instance. The field may have
         a different length time dimension to the original input field
-        (or no time dimension at all).
+        (or no time dimension at all). The time dimension must be first
+        if present.
         
         **Argument:**
         
@@ -522,7 +523,7 @@ class Eof(object):
               eigenvalue.
 
         *weighted*
-            If *True* then the EOFs are weighted prior to projection. If
+            If *True* then the field is weighted prior to projection. If
             *False* then no weighting is applied. Defaults to *True*
             (weighting is applied). Generally only the default setting
             should be used.
@@ -536,34 +537,27 @@ class Eof(object):
         Project fields onto the three leading EOFs:
 
         >>> pcs = eofobj.projectField(field, neofs=3)
-        
+
         """
-        # Check to see if a time dimension is present in the input field. A
-        # time dimension is not required but does need to be accounted for.
-        if field.getTime() is None:
-            notime = True
-        else:
-            notime = False
         # Compute the projected PCs.
         pcs = self.eofobj.projectField(field.asma(), neofs=neofs,
-                eofscaling=eofscaling, weighted=weighted, notime=notime)
-        # Create an axis list, its contents depend on whether or not a time
-        # axis was present in the input field.
-        if notime:
-            # No time axis, just use a PC axis.
+                eofscaling=eofscaling, weighted=weighted)
+        # Construct the required axes.
+        if pcs.ndim == 2:
+            # 2D PCs require a time axis and a PC axis.
+            pcsax = cdms2.createAxis(range(pcs.shape[1]), id="pc")
+            timeax = field.getAxis(0) # time is assumed to be first anyway
+            axlist = [timeax, pcsax]
+        else:
+            # 1D PCs require only a PC axis.
             pcsax = cdms2.createAxis(range(pcs.shape[0]), id="pc")
             axlist = [pcsax]
-        else:
-            # A PC axis and a leading time axis.
-            pcsax = cdms2.createAxis(range(pcs.shape[1]), id="pc")
-            axlist = [field.getTime(), pcsax]
         # Apply meta data to the projected PCs.
         pcs = cdms2.createVariable(pcs, id="pcs", axes=axlist)
         pcs.name = "principal_components"
         pcs.long_name = "principal component time series"
         return pcs
-    
+
 
 if __name__ == "__main__":
     pass
-
