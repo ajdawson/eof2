@@ -21,6 +21,9 @@ from errors import EofError, EofToolError
 # Define the objects imported by imports of the form: from eof2 import *
 __all__ = ["EofError", "EofToolError"]
 
+# Package version number.
+__version__ = "1.5.1"
+
 try:
     # Attempt to import the NumPy-only solver interfaces. These interfaces
     # are required to use the software so importing them should not fail.
