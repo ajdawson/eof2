@@ -415,7 +415,7 @@ class EofSolver(object):
         onto all the EOFs or just a subset. The field must have the same
         corresponding spatial dimensions (including missing values in
         the same places) as the original input to the
-        :py:class:`~eof2.MultipleEofSolver` instance. The field may have a
+        :py:class:`~eof2.EofSolver` instance. The field may have a
         different length time dimension to the original input field (or
         no time dimension at all).
         
