@@ -43,3 +43,5 @@ m.drawcoastlines()
 m.drawparallels(np.arange(-80, 90, 20))
 m.drawmeridians(np.arange(0, 360, 20))
 plt.title('EOF1 expressed as covariance', fontsize=16)
+
+plt.show()

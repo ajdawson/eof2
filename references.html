@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API References &mdash; eof2 1.5.0 documentation</title>
+    <title>API References &mdash; eof2 1.5.1 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5.0',
+        VERSION:     '1.5.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="eof2 1.5.0 documentation" href="index.html" />
+    <link rel="top" title="eof2 1.5.1 documentation" href="index.html" />
     <link rel="prev" title="Examples" href="examples.html" /> 
   </head>
   <body>
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="examples.html" title="Examples"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">eof2 1.5.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">eof2 1.5.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -394,7 +394,8 @@ The field must have the same corresponding spatial dimensions
 (including missing values in the same places) as the original
 input to the <tt class="xref py py-class docutils literal"><span class="pre">Eof</span></tt> instance. The field may have
 a different length time dimension to the original input field
-(or no time dimension at all).</p>
+(or no time dimension at all). The time dimension must be first
+if present.</p>
 <p><strong>Argument:</strong></p>
 <dl class="docutils">
 <dt><em>field</em></dt>
@@ -415,7 +416,7 @@ eigenvalue.</li>
 </ul>
 </dd>
 <dt><em>weighted</em></dt>
-<dd>If <em>True</em> then the EOFs are weighted prior to projection. If
+<dd>If <em>True</em> then the field is weighted prior to projection. If
 <em>False</em> then no weighting is applied. Defaults to <em>True</em>
 (weighting is applied). Generally only the default setting
 should be used.</dd>
@@ -650,14 +651,14 @@ functions&#8221;, <em>Monthly Weather Review</em>, <strong>110</strong>, pages 6
 
 <dl class="method">
 <dt id="eof2.eofsolve.EofSolver.projectField">
-<tt class="descname">projectField</tt><big>(</big><em>field</em>, <em>neofs=None</em>, <em>eofscaling=0</em>, <em>weighted=True</em>, <em>notime=False</em><big>)</big><a class="reference internal" href="_modules/eof2/eofsolve.html#EofSolver.projectField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eof2.eofsolve.EofSolver.projectField" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">projectField</tt><big>(</big><em>field</em>, <em>neofs=None</em>, <em>eofscaling=0</em>, <em>weighted=True</em><big>)</big><a class="reference internal" href="_modules/eof2/eofsolve.html#EofSolver.projectField"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#eof2.eofsolve.EofSolver.projectField" title="Permalink to this definition">¶</a></dt>
 <dd><p>Project a field onto the EOFs.</p>
 <p>Given a field, projects it onto the EOFs to generate a
 corresponding set of time series. The field can be projected
 onto all the EOFs or just a subset. The field must have the same
 corresponding spatial dimensions (including missing values in
 the same places) as the original input to the
-<tt class="xref py py-class docutils literal"><span class="pre">MultipleEofSolver</span></tt> instance. The field may have a
+<tt class="xref py py-class docutils literal"><span class="pre">EofSolver</span></tt> instance. The field may have a
 different length time dimension to the original input field (or
 no time dimension at all).</p>
 <p><strong>Argument:</strong></p>
@@ -682,16 +683,10 @@ eigenvalue.</li>
 </ul>
 </dd>
 <dt><em>weighted</em></dt>
-<dd>If <em>True</em> then the EOFs are weighted prior to projection. If
+<dd>If <em>True</em> then the field is weighted prior to projection. If
 <em>False</em> then no weighting is applied. Defaults to <em>True</em>
 (weighting is applied). Generally only the default setting
 should be used.</dd>
-<dt><em>notime</em></dt>
-<dd>If <em>True</em>, indicates that the input field has no time
-dimension and should be treated as spatial data. If <em>False</em>
-then the first dimension of the field will be assumed to be
-a time dimension. Defaults to <em>False</em> (a time dimension is
-assumed).</dd>
 </dl>
 </dd></dl>
 
@@ -902,7 +897,7 @@ number of samples. Defaults to <em>1</em>.</dd>
         <li class="right" >
           <a href="examples.html" title="Examples"
              >previous</a> |</li>
-        <li><a href="index.html">eof2 1.5.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">eof2 1.5.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

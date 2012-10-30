@@ -7,7 +7,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>eof2.eofwrap &mdash; eof2 1.5.0 documentation</title>
+    <title>eof2.eofwrap &mdash; eof2 1.5.1 documentation</title>
     
     <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '1.5.0',
+        VERSION:     '1.5.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -26,7 +26,7 @@
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="eof2 1.5.0 documentation" href="../../index.html" />
+    <link rel="top" title="eof2 1.5.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="../../index.html">eof2 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">eof2 1.5.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>  
@@ -549,7 +549,8 @@
 <span class="sd">        (including missing values in the same places) as the original</span>
 <span class="sd">        input to the :py:class:`~eof2.Eof` instance. The field may have</span>
 <span class="sd">        a different length time dimension to the original input field</span>
-<span class="sd">        (or no time dimension at all).</span>
+<span class="sd">        (or no time dimension at all). The time dimension must be first</span>
+<span class="sd">        if present.</span>
 <span class="sd">        </span>
 <span class="sd">        **Argument:**</span>
 <span class="sd">        </span>
@@ -571,7 +572,7 @@
 <span class="sd">              eigenvalue.</span>
 
 <span class="sd">        *weighted*</span>
-<span class="sd">            If *True* then the EOFs are weighted prior to projection. If</span>
+<span class="sd">            If *True* then the field is weighted prior to projection. If</span>
 <span class="sd">            *False* then no weighting is applied. Defaults to *True*</span>
 <span class="sd">            (weighting is applied). Generally only the default setting</span>
 <span class="sd">            should be used.</span>
@@ -585,33 +586,27 @@
 <span class="sd">        Project fields onto the three leading EOFs:</span>
 
 <span class="sd">        &gt;&gt;&gt; pcs = eofobj.projectField(field, neofs=3)</span>
-<span class="sd">        </span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c"># Check to see if a time dimension is present in the input field. A</span>
-        <span class="c"># time dimension is not required but does need to be accounted for.</span>
-        <span class="k">if</span> <span class="n">field</span><span class="o">.</span><span class="n">getTime</span><span class="p">()</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">notime</span> <span class="o">=</span> <span class="bp">True</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">notime</span> <span class="o">=</span> <span class="bp">False</span>
         <span class="c"># Compute the projected PCs.</span>
         <span class="n">pcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eofobj</span><span class="o">.</span><span class="n">projectField</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">asma</span><span class="p">(),</span> <span class="n">neofs</span><span class="o">=</span><span class="n">neofs</span><span class="p">,</span>
-                <span class="n">eofscaling</span><span class="o">=</span><span class="n">eofscaling</span><span class="p">,</span> <span class="n">weighted</span><span class="o">=</span><span class="n">weighted</span><span class="p">,</span> <span class="n">notime</span><span class="o">=</span><span class="n">notime</span><span class="p">)</span>
-        <span class="c"># Create an axis list, its contents depend on whether or not a time</span>
-        <span class="c"># axis was present in the input field.</span>
-        <span class="k">if</span> <span class="n">notime</span><span class="p">:</span>
-            <span class="c"># No time axis, just use a PC axis.</span>
+                <span class="n">eofscaling</span><span class="o">=</span><span class="n">eofscaling</span><span class="p">,</span> <span class="n">weighted</span><span class="o">=</span><span class="n">weighted</span><span class="p">)</span>
+        <span class="c"># Construct the required axes.</span>
+        <span class="k">if</span> <span class="n">pcs</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># 2D PCs require a time axis and a PC axis.</span>
+            <span class="n">pcsax</span> <span class="o">=</span> <span class="n">cdms2</span><span class="o">.</span><span class="n">createAxis</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">pcs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;pc&quot;</span><span class="p">)</span>
+            <span class="n">timeax</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">getAxis</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="c"># time is assumed to be first anyway</span>
+            <span class="n">axlist</span> <span class="o">=</span> <span class="p">[</span><span class="n">timeax</span><span class="p">,</span> <span class="n">pcsax</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># 1D PCs require only a PC axis.</span>
             <span class="n">pcsax</span> <span class="o">=</span> <span class="n">cdms2</span><span class="o">.</span><span class="n">createAxis</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">pcs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;pc&quot;</span><span class="p">)</span>
             <span class="n">axlist</span> <span class="o">=</span> <span class="p">[</span><span class="n">pcsax</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c"># A PC axis and a leading time axis.</span>
-            <span class="n">pcsax</span> <span class="o">=</span> <span class="n">cdms2</span><span class="o">.</span><span class="n">createAxis</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">pcs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;pc&quot;</span><span class="p">)</span>
-            <span class="n">axlist</span> <span class="o">=</span> <span class="p">[</span><span class="n">field</span><span class="o">.</span><span class="n">getTime</span><span class="p">(),</span> <span class="n">pcsax</span><span class="p">]</span>
         <span class="c"># Apply meta data to the projected PCs.</span>
         <span class="n">pcs</span> <span class="o">=</span> <span class="n">cdms2</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">pcs</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="s">&quot;pcs&quot;</span><span class="p">,</span> <span class="n">axes</span><span class="o">=</span><span class="n">axlist</span><span class="p">)</span>
         <span class="n">pcs</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;principal_components&quot;</span>
         <span class="n">pcs</span><span class="o">.</span><span class="n">long_name</span> <span class="o">=</span> <span class="s">&quot;principal component time series&quot;</span>
         <span class="k">return</span> <span class="n">pcs</span>
-    
+
 </div></div>
 <span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="k">pass</span>
@@ -653,7 +648,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="../../index.html">eof2 1.5.0 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">eof2 1.5.1 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
