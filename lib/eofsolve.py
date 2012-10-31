@@ -84,43 +84,43 @@ class EofSolver(object):
         # Store the input data in an instance variable.
         if dataset.ndim < 2:
             raise EofError("the input data set must be at least two dimensional")
-        self.dataset = dataset.copy()
+        self._dataset = dataset.copy()
         # Check if the input is a masked array. If so fill it with NaN.
         try:
-            self.dataset = self.dataset.filled(fill_value=np.nan)
+            self._dataset = self._dataset.filled(fill_value=np.nan)
             self._filled = True
         except AttributeError:
             self._filled = False
         # Store information about the shape/size of the input data.
-        self.records = self.dataset.shape[0]
-        self.originalshape = self.dataset.shape[1:]
-        self.channels = np.product(self.originalshape)
+        self._records = self._dataset.shape[0]
+        self._originalshape = self._dataset.shape[1:]
+        channels = np.product(self._originalshape)
         # Weight the data set according to weighting argument.
         if weights is not None:
             try:
-                self.dataset = self.dataset * weights
-                self.weights = weights
+                self._dataset = self._dataset * weights
+                self._weights = weights
             except ValueError:
                 raise EofError("weight array dimensions are incompatible")
             except TypeError:
                 raise EofError("weights are not a valid type")
         else:
-            self.weights = None
+            self._weights = None
         # Remove the time mean of the input data unless explicitly told
         # not to by the "center" argument.
-        self.centered = center
+        self._centered = center
         if center:
-            self.dataset = self._center(self.dataset)
+            self._dataset = self._center(self._dataset)
         # Reshape to two dimensions (time, space) creating the design matrix.
-        self.dataset = self.dataset.reshape([self.records, self.channels])
+        self._dataset = self._dataset.reshape([self._records, channels])
         # Find the indices of values that are not missing in one row. All the
         # rows will have missing values in the same places provided the
         # array was centered. If it wasn't then it is possible that some
         # missing values will be missed and the singular value decomposition
         # will produce not a number for everything.
-        nonMissingIndex = np.where(np.isnan(self.dataset[0])==False)[0]
+        nonMissingIndex = np.where(np.isnan(self._dataset[0])==False)[0]
         # Remove missing values from the design matrix.
-        dataNoMissing = self.dataset[:, nonMissingIndex]
+        dataNoMissing = self._dataset[:, nonMissingIndex]
         # Compute the singular value decomposition of the design matrix.
         A, Lh, E = np.linalg.svd(dataNoMissing, full_matrices=False)
         if np.any(np.isnan(A)):
@@ -129,25 +129,25 @@ class EofSolver(object):
         # covariance matrix. Construct the eigenvalues appropriately and
         # normalize by N-ddof where N is the number of observations. This
         # corresponds to the eigenvalues of the normalized covariance matrix.
-        self.ddof = ddof
-        normfactor = float(self.records - self.ddof)
-        self.L = Lh * Lh / normfactor
+        self._ddof = ddof
+        normfactor = float(self._records - self._ddof)
+        self._L = Lh * Lh / normfactor
         # Store the number of eigenvalues (and hence EOFs) that were actually
         # computed.
-        self.neofs = len(self.L)
+        self.neofs = len(self._L)
         # Re-introduce missing values into the eigenvectors in the same places
         # as they exist in the input maps. Create an array of not-a-numbers
         # and then introduce data values where required. We have to use the
         # astype method to ensure the eigenvectors are the same type as the
         # input dataset since multiplication by np.NaN will promote to 64-bit.
-        self.flatE = np.ones([self.neofs, self.channels],
-                dtype=self.dataset.dtype) * np.NaN
-        self.flatE = self.flatE.astype(self.dataset.dtype)
-        self.flatE[:, nonMissingIndex] = E
+        self._flatE = np.ones([self.neofs, channels],
+                dtype=self._dataset.dtype) * np.NaN
+        self._flatE = self._flatE.astype(self._dataset.dtype)
+        self._flatE[:, nonMissingIndex] = E
         # Remove the scaling on the principal component time-series that is
         # implicitily introduced by using SVD instead of eigen-decomposition.
         # The PCs may be re-scaled later if required.
-        self.P = A * Lh
+        self._P = A * Lh
 
     def _center(self, in_array):
         """Remove the mean of an array along the first dimension."""
@@ -180,13 +180,13 @@ class EofSolver(object):
         slicer = slice(0, npcs)
         if pcscaling == 0:
             # Do not scale.
-            return self.P[:, slicer].copy()
+            return self._P[:, slicer].copy()
         elif pcscaling == 1:
             # Divide by the square-root of the eigenvalue.
-            return self.P[:, slicer] / np.sqrt(self.L[slicer])
+            return self._P[:, slicer] / np.sqrt(self._L[slicer])
         elif pcscaling == 2:
             # Multiply by the square root of the eigenvalue.
-            return self.P[:, slicer] * np.sqrt(self.L[slicer])
+            return self._P[:, slicer] * np.sqrt(self._L[slicer])
         else:
             raise EofError("invalid PC scaling option: %s" % repr(pcscaling))
 
@@ -217,18 +217,18 @@ class EofSolver(object):
             # No modification. A copy needs to be returned in case it is
             # modified. If no copy is made the internally stored eigenvectors
             # could be modified unintentionally.
-            rval = self.flatE[slicer].copy()
+            rval = self._flatE[slicer].copy()
         elif eofscaling == 1:
             # Divide by the square-root of the eigenvalues.
-            rval = self.flatE[slicer] / np.sqrt(self.L[slicer])[:,_NA]
+            rval = self._flatE[slicer] / np.sqrt(self._L[slicer])[:,_NA]
         elif eofscaling == 2:
             # Multiply by the square-root of the eigenvalues.
-            rval = self.flatE[slicer] * np.sqrt(self.L[slicer])[:,_NA]
+            rval = self._flatE[slicer] * np.sqrt(self._L[slicer])[:,_NA]
         else:
             raise EofError("invalid eof scaling option: %s" % repr(eofscaling))
         if self._filled:
             rval = ma.array(rval, mask=np.where(np.isnan(rval), True, False))
-        return rval.reshape((neofs,) + self.originalshape)
+        return rval.reshape((neofs,) + self._originalshape)
 
     def eigenvalues(self, neigs=None):
         """Eigenvalues (decreasing variances) associated with each EOF.
@@ -245,7 +245,7 @@ class EofSolver(object):
         # reference to the eigenvalue array is returned. If this is modified
         # then the internal eigenvalues array would then be modified as well.
         slicer = slice(0, neigs)
-        return self.L[slicer].copy()
+        return self._L[slicer].copy()
 
     def eofsAsCorrelation(self, neofs=None):
         """
@@ -262,7 +262,7 @@ class EofSolver(object):
         pcs = self.pcs(npcs=neofs, pcscaling=1)
         # Compute the correlation of the PCs with the input field.
         c = correlation_map(pcs,
-                self.dataset.reshape((self.records,)+self.originalshape))
+                self._dataset.reshape((self._records,)+self._originalshape))
         # The results of the correlation_map function will be a masked array.
         # For consistency with other return values, this is converted to a
         # numpy array filled with numpy.nan.
@@ -294,10 +294,10 @@ class EofSolver(object):
         pcs = self.pcs(npcs=neofs, pcscaling=pcscaling)
         # Divide the input data by the weighting (if any) before computing
         # the covariance maps.
-        data = self.dataset.reshape((self.records,)+self.originalshape)
-        if self.weights is not None:
-            data /= self.weights
-        c = covariance_map(pcs, data, ddof=self.ddof)
+        data = self._dataset.reshape((self._records,)+self._originalshape)
+        if self._weights is not None:
+            data /= self._weights
+        c = covariance_map(pcs, data, ddof=self._ddof)
         # The results of the covariance_map function will be a masked array.
         # For consitsency with other return values, this is converted to a
         # numpy array filled with numpy.nan.
@@ -321,7 +321,7 @@ class EofSolver(object):
         # Return the array of eigenvalues divided by the sum of the
         # eigenvalues.
         slicer = slice(0, neigs)
-        return self.L[slicer] / self.L.sum()
+        return self._L[slicer] / self._L.sum()
 
     def totalAnomalyVariance(self):
         """
@@ -330,7 +330,7 @@ class EofSolver(object):
         
         """
         # Return the sum of the eigenvalues.
-        return self.L.sum()
+        return self._L.sum()
 
     def reconstructedField(self, neofs):
         """Reconstructed data field based on a subset of EOFs.
@@ -349,14 +349,14 @@ class EofSolver(object):
         """
         # Project principal components onto the EOFs to compute the
         # reconstructed field.
-        rval = np.dot(self.P[:, :neofs], self.flatE[:neofs])
+        rval = np.dot(self._P[:, :neofs], self._flatE[:neofs])
         # Reshape the reconstructed field so it has the same shape as the
         # input data set.
-        rval = rval.reshape((self.records,) + self.originalshape)
+        rval = rval.reshape((self._records,) + self._originalshape)
         # Un-weight the reconstructed field if weighting was performed on
         # the input data set.
-        if self.weights is not None:
-            rval = rval / self.weights
+        if self._weights is not None:
+            rval = rval / self._weights
         # Return the reconstructed field.
         if self._filled:
             rval = ma.array(rval, mask=np.where(np.isnan(rval), True, False))
@@ -395,17 +395,17 @@ class EofSolver(object):
         slicer = slice(0, neigs)
         # Compute the factor that multiplies the eigenvalues. The number of
         # records is assumed to be the number of realizations of the field.
-        factor = np.sqrt(2.0 / self.records)
+        factor = np.sqrt(2.0 / self._records)
         # If requested, allow for scaling of the eigenvalues by the total
         # variance (sum of the eigenvalues).
         if vfscaled:
-            factor /= self.L.sum()
+            factor /= self._L.sum()
         # Return the typical errors.
-        return self.L[slicer] * factor
+        return self._L[slicer] * factor
 
     def getWeights(self):
         """Weights used for the analysis."""
-        return self.weights
+        return self._weights
 
     def projectField(self, field, neofs=None, eofscaling=0, weighted=True):
         """Project a field onto the EOFs.
@@ -450,7 +450,7 @@ class EofSolver(object):
         # Check that the shape/dimension of the input field is compatible with
         # the EOFs.
         input_ndim = field.ndim
-        eof_ndim = len(self.originalshape) + 1
+        eof_ndim = len(self._originalshape) + 1
         if eof_ndim - input_ndim not in (0, 1):
             raise EofError("field and EOFs have incompatible dimensions")
         # Check that the rightmost dimensions of the input field are the same as
@@ -459,7 +459,7 @@ class EofSolver(object):
             check_shape = field.shape[1:]
         else:
             check_shape = field.shape
-        if check_shape != self.originalshape:
+        if check_shape != self._originalshape:
             raise EofError("field and EOFs have incompatible shapes")
         # Create a slice object for truncating the EOFs.
         slicer = slice(0, neofs)
@@ -486,15 +486,15 @@ class EofSolver(object):
         field_flat = field_flat[:, nonMissingIndex]
         # Locate the non-missing values in the EOFs and check they match those
         # in the input field, then isolate the non-missing values.
-        eofNonMissingIndex = np.where(np.isnan(self.flatE[0]) == False)[0]
+        eofNonMissingIndex = np.where(np.isnan(self._flatE[0]) == False)[0]
         if eofNonMissingIndex.shape != nonMissingIndex.shape or \
                 (eofNonMissingIndex != nonMissingIndex).any():
             raise EofError("field and EOFs have different missing value locations")
-        eofs_flat = self.flatE[slicer, eofNonMissingIndex]
+        eofs_flat = self._flatE[slicer, eofNonMissingIndex]
         if eofscaling == 1:
-            eofs_flat /= np.sqrt(self.L[slicer])[:,_NA]
+            eofs_flat /= np.sqrt(self._L[slicer])[:,_NA]
         elif eofscaling == 2:
-            eofs_flat *= np.sqrt(self.L[slicer])[:,_NA]
+            eofs_flat *= np.sqrt(self._L[slicer])[:,_NA]
         # Project the field onto the EOFs using a matrix multiplication.
         projected_pcs = np.dot(field_flat, eofs_flat.T)
         if input_ndim < eof_ndim:

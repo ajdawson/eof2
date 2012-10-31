@@ -154,7 +154,7 @@ class MultipleEofSolver(object):
             # weights.
             warr = None
         # Create an EofSolver object to handle the computations.
-        self.eofobj = EofSolver(dataset, weights=warr, center=center, ddof=1)
+        self._solver = EofSolver(dataset, weights=warr, center=center, ddof=1)
 
     def _unwrap(self, modes):
         """Split a returned mode field into component parts."""
@@ -183,7 +183,7 @@ class MultipleEofSolver(object):
         *npcs* : Number of PCs to retrieve. Defaults to all the PCs.
         
         """
-        return self.eofobj.pcs(pcscaling, npcs)
+        return self._solver.pcs(pcscaling, npcs)
 
     def eofs(self, eofscaling=0, neofs=None):
         """Empirical orthogonal functions (EOFs).
@@ -206,7 +206,7 @@ class MultipleEofSolver(object):
         *neofs* -- Number of EOFs to return. Defaults to all EOFs.
         
         """
-        modes = self.eofobj.eofs(eofscaling, neofs)
+        modes = self._solver.eofs(eofscaling, neofs)
         return self._unwrap(modes)
 
     def eigenvalues(self, neigs=None):
@@ -219,7 +219,7 @@ class MultipleEofSolver(object):
             eigenvalues.
         
         """
-        return self.eofobj.eigenvalues(neigs)
+        return self._solver.eigenvalues(neigs)
 
     def eofsAsCorrelation(self, neofs=None):
         """
@@ -232,7 +232,7 @@ class MultipleEofSolver(object):
             Number of EOFs to return. Defaults to all EOFs.
         
         """
-        modes = self.eofobj.eofsAsCorrelation(neofs)
+        modes = self._solver.eofsAsCorrelation(neofs)
         return self._unwrap(modes)
 
     def eofsAsCovariance(self, neofs=None, pcscaling=1):
@@ -256,7 +256,7 @@ class MultipleEofSolver(object):
               eigenvalue.
 
         """
-        modes = self.eofobj.eofsAsCovariance(neofs, pcscaling)
+        modes = self._solver.eofsAsCovariance(neofs, pcscaling)
         return self._unwrap(modes)
 
     def varianceFraction(self, neigs=None):
@@ -272,7 +272,7 @@ class MultipleEofSolver(object):
             Defaults to all eigenvalues.
         
         """
-        return self.eofobj.varianceFraction(neigs)
+        return self._solver.varianceFraction(neigs)
 
     def totalAnomalyVariance(self):
         """
@@ -280,7 +280,7 @@ class MultipleEofSolver(object):
         of the eigenvalues).
         
         """
-        return self.eofobj.totalAnomalyVariance()
+        return self._solver.totalAnomalyVariance()
 
     def reconstructedField(self, neofs):
         """Reconstructed data field based on a subset of EOFs.
@@ -298,7 +298,7 @@ class MultipleEofSolver(object):
             Number of EOFs to use for the reconstruction.
         
         """
-        rf = self.eofobj.reconstructedField(neofs)
+        rf = self._solver.reconstructedField(neofs)
         return self._unwrap(rf)
 
     def northTest(self, neigs=None, vfscaled=False):
@@ -331,11 +331,11 @@ class MultipleEofSolver(object):
         functions", *Monthly Weather Review*, **110**, pages 669-706.
         
         """
-        return self.eofobj.northTest(neigs, vfscaled)
+        return self._solver.northTest(neigs, vfscaled)
 
     def getWeights(self):
         """Weights used for the analysis."""
-        w = self.eofobj.getWeights()
+        w = self._solver.getWeights()
         return self._unwrap(w)
 
     def projectField(self, *fields, **kwargs):
@@ -444,7 +444,7 @@ class MultipleEofSolver(object):
             dims = filter(None, [nt, channels])
             cfields[..., slicer] = fields[iset].reshape(dims)
         # Compute the projection using the EofSolver object.
-        pcs = self.eofobj.projectField(cfields, neofs=neofs,
+        pcs = self._solver.projectField(cfields, neofs=neofs,
                 eofscaling=eofscaling, weighted=weighted, notime=notime)
         return pcs
 

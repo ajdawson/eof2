@@ -156,9 +156,9 @@ class MultipleEof(object):
                     # Another error occured, raise it as an EOF error.
                     raise EofError(err)
         # Define a time axis as the time axis of the first dataset.
-        self.timeax = self._multitimeaxes[0]
+        self._timeax = self._multitimeaxes[0]
         # Create a MultipleEofSolver to do the computations.
-        self.eofobj = MultipleEofSolver(*[d.asma() for d in datasets],
+        self._solver = MultipleEofSolver(*[d.asma() for d in datasets],
                 weights=passweights, center=center, ddof=ddof)
             
     def pcs(self, pcscaling=0, npcs=None):
@@ -192,9 +192,9 @@ class MultipleEof(object):
         >>> pcs = eofobj.pcs(npcs=3, pcscaling=1) 
 
         """
-        pcs = self.eofobj.pcs(pcscaling, npcs)
+        pcs = self._solver.pcs(pcscaling, npcs)
         pcsax = cdms2.createAxis(range(pcs.shape[1]), id="pc")
-        axlist = [self.timeax, pcsax]
+        axlist = [self._timeax, pcsax]
         pcs = cdms2.createVariable(pcs, id="pcs", axes=axlist)
         pcs.name = "principal_components"
         pcs.long_name = "principal component time series"
@@ -230,7 +230,7 @@ class MultipleEof(object):
         >>> eofs_a, eofs_b = eofobj.eofs(neofs=3, eofscaling=1)
 
         """
-        eofset = self.eofobj.eofs(eofscaling, neofs)
+        eofset = self._solver.eofs(eofscaling, neofs)
         neofs = eofset[0].shape[0]
         eofax = cdms2.createAxis(range(neofs), id="eof")
         varset = list()
@@ -265,7 +265,7 @@ class MultipleEof(object):
         >>> lambda1 = eofobj.eigenvalues(neigs=1)
         
         """
-        lambdas = self.eofobj.eigenvalues(neigs=neigs)
+        lambdas = self._solver.eigenvalues(neigs=neigs)
         eofax = cdms2.createAxis(range(len(lambdas)), id="eigenvalue")
         axlist = [eofax]
         lambdas = cdms2.createVariable(lambdas, id="eigenvalues", axes=axlist)
@@ -302,7 +302,7 @@ class MultipleEof(object):
         >>> eof1_a, eof1_b = eofobj.eofsAsCorrelation(neofs=1)
         
         """
-        eofset = self.eofobj.eofsAsCorrelation(neofs)
+        eofset = self._solver.eofsAsCorrelation(neofs)
         neofs = eofset[0].shape[0]
         eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
@@ -352,7 +352,7 @@ class MultipleEof(object):
         >>> eof1_a, eof1_b = eofobj.eofsAsCovariance(neofs=1, pcscaling=0)
         
         """
-        eofset = self.eofobj.eofsAsCovariance(neofs)
+        eofset = self._solver.eofsAsCovariance(neofs)
         neofs = eofset[0].shape[0]
         eofax = cdms2.createAxis(range(neofs), id="eof")
         for iset in xrange(self._numdsets):
@@ -387,7 +387,7 @@ class MultipleEof(object):
         >>> varfrac = eofobj.VarianceFraction(neigs=3)
         
         """
-        vfrac = self.eofobj.varianceFraction(neigs=neigs)
+        vfrac = self._solver.varianceFraction(neigs=neigs)
         eofax = cdms2.createAxis(range(len(vfrac)), id="eigenvalue")
         axlist = [eofax]
         vfrac = cdms2.createVariable(vfrac, id="variance", axes=axlist)
@@ -407,7 +407,7 @@ class MultipleEof(object):
         >>> var = eofobj.totalAnomalyVariance()
         
         """
-        return self.eofobj.totalAnomalyVariance()
+        return self._solver.totalAnomalyVariance()
 
     def reconstructedField(self, neofs):
         """Reconstructed data field based on a subset of EOFs.
@@ -430,9 +430,9 @@ class MultipleEof(object):
         >>> rfield_a, rfield_b = eofobj.reconstructedField(neofs=3)
         
         """
-        rfset = self.eofobj.reconstructedField(neofs)
+        rfset = self._solver.reconstructedField(neofs)
         for iset in xrange(self._numdsets):
-            axlist = [self.timeax] + self._multichannels[iset]
+            axlist = [self._timeax] + self._multichannels[iset]
             rfset[iset].fill_value = self._multimissing[iset]
             rfset[iset] = cdms2.createVariable(rfset[iset], id="rcon", axes=axlist,
                     fill_value=self._multimissing[iset])
@@ -483,7 +483,7 @@ class MultipleEof(object):
         >>> errs = eofobj.northTest(neigs=3, vfscaled=True)
         
         """
-        typerrs = self.eofobj.northTest(neigs=neigs, vfscaled=vfscaled)
+        typerrs = self._solver.northTest(neigs=neigs, vfscaled=vfscaled)
         eofax = cdms2.createAxis(range(len(typerrs)), id="eigenvalue")
         axlist = [eofax]
         typerrs = cdms2.createVariable(typerrs, id="typical_errors", axes=axlist)
@@ -550,7 +550,7 @@ class MultipleEof(object):
             notime = True
         else:
             notime = False
-        pcs = self.eofobj.projectField([f.asma() for f in fields],
+        pcs = self._solver.projectField([f.asma() for f in fields],
                 neofs=neofs, eofscaling=eofscaling, weighted=weighted,
                 notime=notime)
         # Create an axis list, its contents depend on whether or not a time

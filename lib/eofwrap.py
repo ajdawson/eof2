@@ -94,10 +94,10 @@ class Eof(object):
         if not cdms2.isVariable(dataset):
             raise EofError("the input data must be a cdms2 variable")
         # Store the time axis as an instance variable.
-        self.timeax = dataset.getTime()
+        self._timeax = dataset.getTime()
         # Verify that a time axis was found, getTime returns None when a
         # time axis is not found.
-        if self.timeax is None:
+        if self._timeax is None:
             raise EofError("time axis not found")
         # Check the dimension order of the input, time must be the first
         # dimension.
@@ -108,13 +108,13 @@ class Eof(object):
         # instance variable channels will also be used as a partial axis
         # list when constructing meta-data. It contains the spatial
         # dimensions.
-        self.channels = dataset.getAxisList()
-        self.channels.remove(self.timeax)
-        if len(self.channels) < 1:
+        self._channels = dataset.getAxisList()
+        self._channels.remove(self._timeax)
+        if len(self._channels) < 1:
             raise EofError("one or more spatial dimensions are required")
         # Store the missing value attribute of the data set in an
         # instance variable so that it is recoverable later.
-        self.missingValue = dataset.getMissing()
+        self._missing_value = dataset.getMissing()
         # Generate an appropriate set of weights for the input dataset. There
         # are several weighting schemes. The "area" weighting scheme requires
         # a latitude-longitude grid to be present, the "cos_lat" scheme only
@@ -146,8 +146,9 @@ class Eof(object):
         # Create an EofSolver object using appropriate arguments for this
         # data set. The object will be used for the decomposition and
         # for returning the results.
-        self.eofobj = EofSolver(dataset.asma(), weights=wtarray,
+        self._solver = EofSolver(dataset.asma(), weights=wtarray,
                 center=center, ddof=ddof)
+        self.neofs = self._solver.neofs
         
     def pcs(self, pcscaling=0, npcs=None):
         """Principal component time series (PCs).
@@ -180,9 +181,9 @@ class Eof(object):
         >>> pcs = eofobj.pcs(npcs=3, pcscaling=1) 
 
         """
-        pcs = self.eofobj.pcs(pcscaling, npcs)
+        pcs = self._solver.pcs(pcscaling, npcs)
         pcsax = cdms2.createAxis(range(pcs.shape[1]), id="pc")
-        axlist = [self.timeax, pcsax]
+        axlist = [self._timeax, pcsax]
         pcs = cdms2.createVariable(pcs, id="pcs", axes=axlist)
         pcs.name = "principal_components"
         pcs.long_name = "principal component time series"
@@ -218,12 +219,12 @@ class Eof(object):
         >>> eofs = eofobj.eofs(neofs=3, eofscaling=1)
 
         """
-        eofs = self.eofobj.eofs(eofscaling, neofs)
-        eofs.fill_value = self.missingValue
+        eofs = self._solver.eofs(eofscaling, neofs)
+        eofs.fill_value = self._missing_value
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
-        axlist = [eofax] + self.channels
+        axlist = [eofax] + self._channels
         eofs = cdms2.createVariable(eofs, id="eofs", axes=axlist,
-                fill_value=self.missingValue)
+                fill_value=self._missing_value)
         eofs.name = "empirical_orthogonal_functions"
         eofs.long_name = "empirical orthogonal functions"
         return eofs
@@ -250,7 +251,7 @@ class Eof(object):
         >>> lambda1 = eofobj.eigenvalues(neigs=1)
         
         """
-        lambdas = self.eofobj.eigenvalues(neigs=neigs)
+        lambdas = self._solver.eigenvalues(neigs=neigs)
         eofax = cdms2.createAxis(range(len(lambdas)), id="eigenvalue")
         axlist = [eofax]
         lambdas = cdms2.createVariable(lambdas, id="eigenvalues", axes=axlist)
@@ -287,12 +288,12 @@ class Eof(object):
         >>> eof1 = eofobj.eofsAsCorrelation(neofs=1)
         
         """
-        eofs = self.eofobj.eofsAsCorrelation(neofs)
-        eofs.fill_value = self.missingValue
+        eofs = self._solver.eofsAsCorrelation(neofs)
+        eofs.fill_value = self._missing_value
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
-        axlist = [eofax] + self.channels
+        axlist = [eofax] + self._channels
         eofs = cdms2.createVariable(eofs, id="eofs_corr", axes=axlist,
-                fill_value=self.missingValue)
+                fill_value=self._missing_value)
         eofs.name = "empirical_orthogonal_functions"
         eofs.long_name = "correlation between principal components and data"
         return eofs
@@ -335,12 +336,12 @@ class Eof(object):
         >>> eof1 = eofobj.eofsAsCovariance(neofs=1, pcscaling=0)
         
         """
-        eofs = self.eofobj.eofsAsCovariance(neofs, pcscaling)
-        eofs.fill_value = self.missingValue
+        eofs = self._solver.eofsAsCovariance(neofs, pcscaling)
+        eofs.fill_value = self._missing_value
         eofax = cdms2.createAxis(range(len(eofs)), id="eof")
-        axlist = [eofax] + self.channels
+        axlist = [eofax] + self._channels
         eofs = cdms2.createVariable(eofs, id="eofs_cov", axes=axlist,
-                fill_value=self.missingValue)
+                fill_value=self._missing_value)
         eofs.name = "empirical_orthogonal_functions"
         eofs.long_name = "covariance between principal components and data"
         return eofs
@@ -368,7 +369,7 @@ class Eof(object):
         >>> varfrac = eofobj.VarianceFraction(neigs=3)
         
         """
-        vfrac = self.eofobj.varianceFraction(neigs=neigs)
+        vfrac = self._solver.varianceFraction(neigs=neigs)
         eofax = cdms2.createAxis(range(len(vfrac)), id="eigenvalue")
         axlist = [eofax]
         vfrac = cdms2.createVariable(vfrac, id="variance", axes=axlist)
@@ -388,7 +389,7 @@ class Eof(object):
         >>> var = eofobj.totalAnomalyVariance()
         
         """
-        return self.eofobj.totalAnomalyVariance()
+        return self._solver.totalAnomalyVariance()
         
     def reconstructedField(self, neofs):
         """Reconstructed data field based on a subset of EOFs.
@@ -411,11 +412,11 @@ class Eof(object):
         >>> rfield = eofobj.reconstructedField(neofs=3)
         
         """
-        rfield = self.eofobj.reconstructedField(neofs)
-        rfield.fill_value = self.missingValue
-        axlist = [self.timeax] + self.channels
+        rfield = self._solver.reconstructedField(neofs)
+        rfield.fill_value = self._missing_value
+        axlist = [self._timeax] + self._channels
         rfield = cdms2.createVariable(rfield, id="rcon", axes=axlist,
-                fill_value=self.missingValue)
+                fill_value=self._missing_value)
         rfield.long_name = "reconstructed_field"
         return rfield
     
@@ -462,7 +463,7 @@ class Eof(object):
         >>> errs = eofobj.northTest(neigs=3, vfscaled=True)
         
         """
-        typerrs = self.eofobj.northTest(neigs=neigs, vfscaled=vfscaled)
+        typerrs = self._solver.northTest(neigs=neigs, vfscaled=vfscaled)
         eofax = cdms2.createAxis(range(len(typerrs)), id="eigenvalue")
         axlist = [eofax]
         typerrs = cdms2.createVariable(typerrs, id="typical_errors", axes=axlist)
@@ -480,9 +481,9 @@ class Eof(object):
         >>> wgt = eofobj.getWeights()
 
         """
-        weights = self.eofobj.getWeights()
+        weights = self._solver.getWeights()
         if weights is not None:
-            axlist = self.channels[-2:]
+            axlist = self._channels[-2:]
             weights = cdms2.createVariable(weights, id="weights", axes=axlist)
             weights.name = "weights"
             weights.long_name = "grid_weights"
@@ -540,7 +541,7 @@ class Eof(object):
 
         """
         # Compute the projected PCs.
-        pcs = self.eofobj.projectField(field.asma(), neofs=neofs,
+        pcs = self._solver.projectField(field.asma(), neofs=neofs,
                 eofscaling=eofscaling, weighted=weighted)
         # Construct the required axes.
         if pcs.ndim == 2:
