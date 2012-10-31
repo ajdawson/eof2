@@ -25,6 +25,6 @@ setup(
     author="Andrew Dawson",
     author_email="dawson@atm.ox.ac.uk",
     packages=["eof2"],
-    package_dir={"eof2":"Lib"}
+    package_dir={"eof2":"lib"}
 )
 
