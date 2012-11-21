@@ -296,7 +296,11 @@ class EofSolver(object):
         # the covariance maps.
         data = self._dataset.reshape((self._records,)+self._originalshape)
         if self._weights is not None:
-            data /= self._weights
+            with warnings.catch_warnings():
+                # If any weight is zero this will produce a runtime error,
+                # just ignore it.
+                warnings.simplefilter('ignore', category=RuntimeWarning)
+                data /= self._weights
         c = covariance_map(pcs, data, ddof=self._ddof)
         # The results of the covariance_map function will be a masked array.
         # For consitsency with other return values, this is converted to a
