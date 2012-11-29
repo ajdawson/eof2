@@ -30,8 +30,6 @@ try:
     from eofsolve import EofSolver, EofNumPy
     __all__.append("EofSolver")
     __all__.append("EofNumPy")
-    from eofmultisolve import MultipleEofSolver
-    __all__.append("MultipleEofSolver")
     # Also import the NumPy-only versions of the supplementary tools.
     import nptools
     __all__.append("nptools")
@@ -45,8 +43,6 @@ try:
     # the cdms2 module available.
     from eofwrap import Eof
     __all__.append("Eof")
-    from eofmultiwrap import MultipleEof
-    __all__.append("MultipleEof")
     # Also import the cdms2 wrapped versions of the supplementary tools.
     import tools
     __all__.append("tools")
