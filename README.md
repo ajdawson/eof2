@@ -1,6 +1,10 @@
 eof2 - EOF analysis in Python
 =============================
 
+# Deprecation notice:
+
+eof2 has been replaced by [eofs](https://github.com/ajdawson/eofs) and may not be maintained further. All of the features of eof2 are available in eofs.
+
 
 Overview
 --------
