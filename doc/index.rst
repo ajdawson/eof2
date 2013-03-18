@@ -6,6 +6,13 @@
 eof2's Documentation
 ====================
 
+.. note::
+
+   :py:mod:`eof2` has been replaced by  eofs_.
+   :py:mod:`eof2` is still functional but it is not likely to be maintained any further.
+   Please consider switching to eofs_ for new installations.
+
+
 .. toctree::
    :maxdepth: 2
 
@@ -14,3 +21,5 @@ eof2's Documentation
    examples.rst
    references.rst
 
+
+.. _eofs: http://ajdawson.github.com/eofs

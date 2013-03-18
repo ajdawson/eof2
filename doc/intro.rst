@@ -1,6 +1,12 @@
 Introduction
 ============
 
+.. note::
+
+   :py:mod:`eof2` has been replaced by  eofs_.
+   :py:mod:`eof2` is still functional but it is not likely to be maintained any further.
+   Please consider switching to eofs_ for new installations.
+
 :py:mod:`eof2` is a Python package for EOF analysis of spatial-temporal data. Some of the key features of :py:mod:`eof2` are:
 
 * **Suitable for large data sets:** computationally efficient for the large output data sets of modern climate models.
@@ -67,3 +73,5 @@ All development is done through the `github <http://github.com/ajdawson/eof2>`_ 
 
 Please file bug reports and feature requests using the github `issues <http://github.com/ajdawson/eof2/issues?state=open>`_.
 
+
+.. _eofs: http://ajdawson.github.com/eofs
