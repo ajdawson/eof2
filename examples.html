@@ -223,7 +223,7 @@ Many of the examples have a version for each of</p>
 
 <span class="c"># Create an EOF solver to do the EOF analysis. Square-root of cosine of</span>
 <span class="c"># latitude weights are applied before the computation of EOFs.</span>
-<span class="n">coslat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">lats</span><span class="p">))</span>
+<span class="n">coslat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">lats</span><span class="p">))</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">)</span>
 <span class="n">wgts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">coslat</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">EofSolver</span><span class="p">(</span><span class="n">z_djf</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">wgts</span><span class="p">)</span>
 

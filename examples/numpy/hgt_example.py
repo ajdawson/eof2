@@ -28,7 +28,7 @@ z_djf = z_djf - z_djf_mean
 
 # Create an EOF solver to do the EOF analysis. Square-root of cosine of
 # latitude weights are applied before the computation of EOFs.
-coslat = np.cos(np.deg2rad(lats))
+coslat = np.cos(np.deg2rad(lats)).clip(0.,1.)
 wgts = np.sqrt(coslat)[..., np.newaxis]
 solver = EofSolver(z_djf, weights=wgts)
 

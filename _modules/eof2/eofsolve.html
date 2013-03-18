@@ -345,7 +345,11 @@
         <span class="c"># the covariance maps.</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dataset</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_records</span><span class="p">,)</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">_originalshape</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span>
+            <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                <span class="c"># If any weight is zero this will produce a runtime error,</span>
+                <span class="c"># just ignore it.</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weights</span>
         <span class="n">c</span> <span class="o">=</span> <span class="n">covariance_map</span><span class="p">(</span><span class="n">pcs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ddof</span><span class="p">)</span>
         <span class="c"># The results of the covariance_map function will be a masked array.</span>
         <span class="c"># For consitsency with other return values, this is converted to a</span>
