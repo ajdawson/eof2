@@ -544,13 +544,20 @@ class MultipleEof(object):
         
         """
         multitimeaxes = list()
+        keywords = {"weighted": "True", "eofscaling":0, "neofs":"none"}
+        for kwarg in kwargs:
+            if kwarg not in keywords.keys():
+                raise EofError("invalid argument: %s" % kwarg)
+        weighted = kwargs.get("weighted", keywords["weighted"])
+        eofscaling=kwargs.get("eofscaling", keywords["eofscaling"])
+        neofs=kwargs.get("neofs", keywords["neofs"])
         for field in fields:
             multitimeaxes.append(field.getTime())
         if None in multitimeaxes:
             notime = True
         else:
             notime = False
-        pcs = self._solver.projectField([f.asma() for f in fields],
+        pcs = self._solver.projectField(*[f.asma() for f in fields],
                 neofs=neofs, eofscaling=eofscaling, weighted=weighted,
                 notime=notime)
         # Create an axis list, its contents depend on whether or not a time
@@ -568,8 +575,3 @@ class MultipleEof(object):
         pcs.name = "principal_components"
         pcs.long_name = "principal component time series"
         return pcs
-
-
-if __name__ == "__main__":
-    pass
-
